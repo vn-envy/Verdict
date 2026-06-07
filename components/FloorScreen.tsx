@@ -13,8 +13,12 @@ import { VerdictCard } from "./VerdictCard";
 import { ColdOpen } from "./ColdOpen";
 import { SealedBallot } from "./SealedBallot";
 
-// The backend (FastAPI) base URL for live deliberations. Override via NEXT_PUBLIC_API_BASE.
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+// The backend (FastAPI) base URL for live deliberations. Defaults to the deployed Azure
+// Container App; override via NEXT_PUBLIC_API_BASE for local dev (e.g. http://localhost:8000).
+// `||` (not `??`) so an empty build-arg still falls back to the live API rather than same-origin.
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ||
+  "https://ca-api-taaq4xfj2gl.mangofield-bb2f9c8d.eastus2.azurecontainerapps.io";
 
 const SOURCES: { id: string; label: string; source: StreamSource }[] = [
   { id: "C", label: "▶ Replay · C · Tariffs (hero)", source: { mode: "replay", url: "/case_C_tape.json" } },
