@@ -16,6 +16,10 @@ param searchLocation string = 'eastus'
 @description('Object ID of the developer/principal who runs azd, granted data-plane roles for local-first dev (az ad signed-in-user object-id).')
 param principalId string = ''
 
+@description('Entra type of principalId: "User" for a developer running azd locally, "ServicePrincipal" in CI/CD pipelines.')
+@allowed([ 'User', 'ServicePrincipal' ])
+param principalType string = 'User'
+
 // Azure OpenAI deployments to create on the AI Services account.
 // `sku` is per-model: it must match the deployment quota you actually hold in the
 // region (see `az cognitiveservices usage list -l <region>`). On this subscription
@@ -49,6 +53,7 @@ module resources 'resources.bicep' = {
     environmentName: environmentName
     tags: tags
     principalId: principalId
+    principalType: principalType
     openAiDeployments: openAiDeployments
   }
 }

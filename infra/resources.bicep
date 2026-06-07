@@ -9,6 +9,8 @@ param searchLocation string = location
 param environmentName string
 param tags object
 param principalId string
+@description('Entra type of principalId ("User" locally, "ServicePrincipal" in CI). Drives roleAssignment principalType.')
+param principalType string = 'User'
 param openAiDeployments array
 
 // Short, unique-ish suffix for globally-scoped names.
@@ -167,25 +169,25 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 resource raOpenAi 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for s in principalSlots: {
   name: guid(aiServices.id, s == 'mi' ? mi.id : principalId, roleOpenAiUser)
   scope: aiServices
-  properties: { roleDefinitionId: roleOpenAiUser, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : 'User' }
+  properties: { roleDefinitionId: roleOpenAiUser, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
 }]
 
 resource raContentSafety 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for s in principalSlots: {
   name: guid(contentSafety.id, s == 'mi' ? mi.id : principalId, roleCognitiveUser)
   scope: contentSafety
-  properties: { roleDefinitionId: roleCognitiveUser, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : 'User' }
+  properties: { roleDefinitionId: roleCognitiveUser, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
 }]
 
 resource raSearchData 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for s in principalSlots: {
   name: guid(search.id, s == 'mi' ? mi.id : principalId, roleSearchIndexData)
   scope: search
-  properties: { roleDefinitionId: roleSearchIndexData, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : 'User' }
+  properties: { roleDefinitionId: roleSearchIndexData, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
 }]
 
 resource raSearchService 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for s in principalSlots: {
   name: guid(search.id, s == 'mi' ? mi.id : principalId, roleSearchService)
   scope: search
-  properties: { roleDefinitionId: roleSearchService, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : 'User' }
+  properties: { roleDefinitionId: roleSearchService, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
 }]
 
 output managedIdentityClientId string = mi.properties.clientId
