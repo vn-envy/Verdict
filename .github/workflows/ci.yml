@@ -29,8 +29,10 @@ jobs:
         with:
           python-version: "3.11"
       - name: Syntax-check all backend modules
-        run: python -m py_compile backend/*.py
-      - name: Unit-test the deterministic Consensus Engine
+        run: python -m py_compile backend/*.py backend/eval/*.py
+      - name: Unit-test the Consensus Engine + eval metrics
         run: |
           pip install --quiet pytest
-          python -m pytest backend/tests/test_consensus.py -q
+          python -m pytest backend/tests -q
+      - name: Eval harness (offline dry run over canned tapes)
+        run: python backend/eval/run_eval.py --dry

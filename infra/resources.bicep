@@ -190,9 +190,114 @@ resource raSearchService 'Microsoft.Authorization/roleAssignments@2022-04-01' = 
   properties: { roleDefinitionId: roleSearchService, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
 }]
 
+// ============================================================================
+// Container hosting — ACR + Azure Container Apps for the backend (FastAPI) and web (Next.js).
+// azd matches services to apps by the 'azd-service-name' tag, builds the image, pushes to
+// ACR, and updates the app. Keyless: the apps use the same user-assigned MI (data-plane RBAC)
+// and pull from ACR via AcrPull. Scale-to-zero keeps idle cost ~0 on a free subscription.
+// ============================================================================
+var placeholderImage = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+var roleAcrPull = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull
+
+resource acr 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' = {
+  name: 'acr${namePrefix}'
+  location: location
+  tags: tags
+  sku: { name: 'Basic' }
+  properties: { adminUserEnabled: false }
+}
+
+resource raAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(acr.id, mi.id, roleAcrPull)
+  scope: acr
+  properties: { roleDefinitionId: roleAcrPull, principalId: mi.properties.principalId, principalType: 'ServicePrincipal' }
+}
+
+resource acaEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: 'cae-${namePrefix}'
+  location: location
+  tags: tags
+  properties: {
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: logAnalytics.properties.customerId
+        sharedKey: logAnalytics.listKeys().primarySharedKey
+      }
+    }
+  }
+}
+
+// Web first so the backend can allow its origin (CORS) without a cycle.
+resource webApp 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'ca-web-${namePrefix}'
+  location: location
+  tags: union(tags, { 'azd-service-name': 'web' })
+  identity: { type: 'UserAssigned', userAssignedIdentities: { '${mi.id}': {} } }
+  properties: {
+    managedEnvironmentId: acaEnv.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: { external: true, targetPort: 3000, transport: 'auto' }
+      registries: [ { server: acr.properties.loginServer, identity: mi.id } ]
+    }
+    template: {
+      containers: [ { name: 'web', image: placeholderImage } ]
+      scale: { minReplicas: 0, maxReplicas: 2 }
+    }
+  }
+}
+
+resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'ca-api-${namePrefix}'
+  location: location
+  tags: union(tags, { 'azd-service-name': 'orchestrator' })
+  identity: { type: 'UserAssigned', userAssignedIdentities: { '${mi.id}': {} } }
+  properties: {
+    managedEnvironmentId: acaEnv.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: { external: true, targetPort: 8000, transport: 'auto' }
+      registries: [ { server: acr.properties.loginServer, identity: mi.id } ]
+    }
+    template: {
+      containers: [ {
+        name: 'orchestrator'
+        image: placeholderImage
+        resources: { cpu: json('1.0'), memory: '2Gi' }
+        env: [
+          { name: 'AZURE_CLIENT_ID', value: mi.properties.clientId }   // pin DefaultAzureCredential to this MI
+          { name: 'AZURE_OPENAI_ENDPOINT', value: aiServices.properties.endpoint }
+          { name: 'AZURE_OPENAI_API_VERSION', value: '2024-10-21' }
+          { name: 'AZURE_OPENAI_GPT4O_DEPLOYMENT', value: 'gpt-4o' }
+          { name: 'AZURE_OPENAI_GPT4O_MINI_DEPLOYMENT', value: 'gpt-41-mini' }
+          { name: 'AZURE_OPENAI_OSERIES_DEPLOYMENT', value: 'o4-mini' }
+          { name: 'COSMOS_ENDPOINT', value: cosmos.properties.documentEndpoint }
+          { name: 'COSMOS_DATABASE', value: 'deliberations' }
+          { name: 'COSMOS_CONTAINER', value: 'events' }
+          { name: 'CONTENTSAFETY_ENDPOINT', value: contentSafety.properties.endpoint }
+          { name: 'SEARCH_ENDPOINT', value: 'https://${search.name}.search.windows.net' }
+          { name: 'CATALOG_INFERENCE_ENDPOINT', value: 'https://${aiServices.name}.services.ai.azure.com/' }
+          { name: 'CATALOG_PHI4_DEPLOYMENT', value: 'Phi-4' }
+          { name: 'CATALOG_MISTRAL_DEPLOYMENT', value: 'Mistral-Large-3' }
+          { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
+          { name: 'ALLOWED_ORIGINS', value: 'https://${webApp.properties.configuration.ingress.fqdn}' }
+        ]
+      } ]
+      scale: { minReplicas: 0, maxReplicas: 3 }
+    }
+  }
+}
+
+output acrLoginServer string = acr.properties.loginServer
+output apiUri string = 'https://${apiApp.properties.configuration.ingress.fqdn}'
+output webUri string = 'https://${webApp.properties.configuration.ingress.fqdn}'
+
 output managedIdentityClientId string = mi.properties.clientId
 output openAiEndpoint string = aiServices.properties.endpoint
 output aiServicesEndpoint string = aiServices.properties.endpoint
+// Azure AI model-inference endpoint (serves the catalog models: Phi-4, Mistral).
+output catalogInferenceEndpoint string = 'https://${aiServices.name}.services.ai.azure.com/'
 output contentSafetyEndpoint string = contentSafety.properties.endpoint
 output searchEndpoint string = 'https://${search.name}.search.windows.net'
 output cosmosEndpoint string = cosmos.properties.documentEndpoint

@@ -1,0 +1,54 @@
+name: Eval (live swarm)
+
+# Manual only — a live eval runs the real swarm + a single-model baseline and costs tokens.
+# (CI runs the offline `--dry` eval on every push; see ci.yml.)
+on:
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: "Comma-separated case keys"
+        default: "C,A,B"
+      panel:
+        description: "Panel size per case"
+        default: "6"
+
+permissions:
+  id-token: write   # keyless OIDC federated login
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Azure/setup-azd@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Log in with Azure (federated credentials)
+        run: |
+          azd auth login \
+            --client-id "$AZURE_CLIENT_ID" \
+            --federated-credential-provider github \
+            --tenant-id "$AZURE_TENANT_ID"
+      - name: Pull resource endpoints from the azd environment
+        run: |
+          azd env new "$AZURE_ENV_NAME" --subscription "$AZURE_SUBSCRIPTION_ID" --location "$AZURE_LOCATION" --no-prompt || true
+          azd env refresh -e "$AZURE_ENV_NAME" --no-prompt
+          azd env get-values > backend/.env
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Run evaluation
+        run: python backend/eval/run_eval.py --cases "${{ inputs.cases }}" --panel "${{ inputs.panel }}"
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: backend/eval/out/

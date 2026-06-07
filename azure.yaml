@@ -4,19 +4,27 @@ name: twelve-angry-agents
 metadata:
   template: 12-angry-agents@v0.1
 
-# Infra is the focus for now (local-first orchestrator). Services are wired in
-# later when we deploy to Azure Container Apps.
 infra:
   provider: bicep
   path: infra
   module: main
 
-# services:
-#   orchestrator:
-#     project: ./backend
-#     language: py
-#     host: containerapp
-#   web:
-#     project: .
-#     language: js
-#     host: containerapp
+# Deployed to Azure Container Apps. azd builds each image, pushes to ACR, and updates the
+# matching container app (matched by the 'azd-service-name' tag in infra/resources.bicep).
+services:
+  orchestrator:
+    project: ./backend
+    language: py
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+  web:
+    project: .
+    language: js
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      # The backend URL is inlined into the Next.js build (NEXT_PUBLIC_*); BACKEND_URI is a
+      # provision output, so it's known before the web image is built.
+      buildArgs:
+        - NEXT_PUBLIC_API_BASE=${BACKEND_URI}

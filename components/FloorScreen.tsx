@@ -48,7 +48,7 @@ export function FloorScreen() {
           <span className="live-dot" /> LIVE
         </span>
         <span className="brand">
-          THE DELIBERATION ROOM
+          VERDICT
           <span className="brand-sub">12 Angry Agents · unbiased by construction</span>
         </span>
         <span className="masthead-right">

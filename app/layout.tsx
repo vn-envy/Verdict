@@ -6,8 +6,8 @@ const display = Space_Grotesk({ subsets: ["latin"], weight: ["500", "600", "700"
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata: Metadata = {
-  title: "The Deliberation Room — 12 Angry Agents",
-  description: "A live, fact-grounded debate room.",
+  title: "Verdict — 12 Angry Agents",
+  description: "A live, fact-grounded, unbiased-by-construction deliberation room.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

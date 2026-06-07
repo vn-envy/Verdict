@@ -1,0 +1,11 @@
+{
+  "note": "Labeled benchmark for Verdict. truth_sign: +1 true, -1 false, 0 contested. Claims + evidence are loaded from cases.py (the seeded house cases).",
+  "cases": [
+    { "key": "C", "truth_sign": -1, "truth_label": "likely_false",
+      "rationale": "Tariff costs pass through to consumers; no broad historical episode lowered the basket." },
+    { "key": "A", "truth_sign": 0, "truth_label": "contested",
+      "rationale": "Surge-pricing fairness is a genuine values split, not a factual yes/no." },
+    { "key": "B", "truth_sign": -1, "truth_label": "leaning_false",
+      "rationale": "A one-time 50% AI wealth tax has large second-order costs; net public benefit is not established." }
+  ]
+}

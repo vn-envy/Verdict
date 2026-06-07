@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,9 +23,14 @@ from events import EventBus
 from models import ModelRegistry
 from orchestrator import Foreman
 
-app = FastAPI(title="12 Angry Agents — Deliberation Engine")
+app = FastAPI(title="Verdict — Deliberation Engine")
+# Allowed origins: localhost for dev + the deployed web app (ALLOWED_ORIGINS, comma-separated,
+# set from the web container app's FQDN in infra/resources.bicep).
+_origins = ["http://localhost:3000"] + [
+    o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
 app.add_middleware(
-    CORSMiddleware, allow_origins=["http://localhost:3000"], allow_methods=["*"], allow_headers=["*"],
+    CORSMiddleware, allow_origins=_origins, allow_methods=["*"], allow_headers=["*"],
 )
 
 _settings: Settings

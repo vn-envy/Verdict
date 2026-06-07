@@ -75,3 +75,14 @@ output COSMOS_DATABASE string = resources.outputs.cosmosDatabase
 output COSMOS_CONTAINER string = resources.outputs.cosmosContainer
 output KEYVAULT_ENDPOINT string = resources.outputs.keyVaultEndpoint
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = resources.outputs.appInsightsConnectionString
+
+// Catalog (non-OpenAI Foundry) models — served from the AI model-inference endpoint.
+// Deployment names are the portal-created Global Standard deployments (see BACKEND_SETUP §4).
+output CATALOG_INFERENCE_ENDPOINT string = resources.outputs.catalogInferenceEndpoint
+output CATALOG_PHI4_DEPLOYMENT string = 'Phi-4'
+output CATALOG_MISTRAL_DEPLOYMENT string = 'Mistral-Large-3'
+
+// Container hosting — azd pushes images here and wires the web build to the backend URL.
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.acrLoginServer
+output BACKEND_URI string = resources.outputs.apiUri
+output WEB_URI string = resources.outputs.webUri

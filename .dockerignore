@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+backend/.venv
+backend/out
+backend/eval/out
+backend/__pycache__
+.azure
+.git
+.github
+screenshots
+*.tsbuildinfo
+.DS_Store
+.env
+backend/.env
