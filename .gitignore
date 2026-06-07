@@ -1,0 +1,21 @@
+/node_modules
+/.next
+/out
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# azd / Azure
+.azure/
+
+# Claude Code harness runtime state
+.claude/
+
+# Python backend
+.venv/
+__pycache__/
+*.pyc
+backend/.env
+backend/out/
+.pytest_cache/
+.env

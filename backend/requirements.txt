@@ -1,0 +1,23 @@
+# Core (keyless auth + the three services the smoke test touches)
+azure-identity>=1.19
+openai>=1.54
+azure-cosmos>=4.7
+python-dotenv>=1.0
+
+# Used as the orchestrator grows (kept here so the venv is ready)
+azure-search-documents>=11.5
+azure-ai-contentsafety>=1.0
+fastapi>=0.115
+uvicorn[standard]>=0.32
+sse-starlette>=2.1
+
+# Microsoft Agent Framework — the orchestration engine (successor to AutoGen + SK).
+# Package name/version settled post-merge; pinned after verifying on PyPI (1.8.0, 2026-06).
+agent-framework==1.8.0
+# Catalog (non-OpenAI Foundry) models — Phi-4, Mistral — via the Azure AI model-inference endpoint.
+# Still pre-1.0 (beta) as of 2026-06; pin the exact prerelease so pip resolves it without --pre.
+azure-ai-inference==1.0.0b9
+# Structured agent I/O, retry/backoff (Phi-4 is cap-1 TPM), and tape schema validation.
+pydantic>=2.7
+tenacity>=8.3
+jsonschema>=4.22

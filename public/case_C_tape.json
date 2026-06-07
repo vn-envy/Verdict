@@ -1,0 +1,249 @@
+{
+  "tape_version": "1.0",
+  "case_id": "C-tariffs-001",
+  "title": "Tariffs lower domestic prices for consumers",
+  "note": "Canned replay fixture for the Act-2 Floor. Schema-valid per 12_angry_agents_event_schema.md. Feed `events` to useEventStream() in replay mode (order by seq).",
+  "evidence_catalog": [
+    { "id": "ev1", "title": "Pass-through of tariffs to import prices (NBER, 2019)", "url": "https://www.nber.org/papers/example-ev1", "snippet": "Near-complete pass-through of 2018 tariffs to US import prices; consumers bore the cost.", "credibility": 0.88 },
+    { "id": "ev2", "title": "BLS import & consumer price indices", "url": "https://www.bls.gov/cpi/example-ev2", "snippet": "Categories under tariff showed price increases relative to untariffed goods.", "credibility": 0.85 },
+    { "id": "ev3", "title": "The Impact of the 2018 Trade War on US Prices (Amiti, Redding, Weinstein)", "url": "https://example.org/ev3", "snippet": "Tariff incidence fell almost entirely on US importers and consumers.", "credibility": 0.90 },
+    { "id": "ev4", "title": "Infant-industry & scale effects: South Korea case study", "url": "https://example.org/ev4", "snippet": "Protected sectors achieved scale, but consumer-price effects were mixed and slow.", "credibility": 0.70 },
+    { "id": "ev5", "title": "Retail shelf-price tracking, 2018-2019", "url": "https://example.org/ev5", "snippet": "Affected categories saw shelf-price increases within 2-4 months of tariff onset.", "credibility": 0.78 },
+    { "id": "ev6", "title": "Smoot-Hawley and consumer prices: historical review", "url": "https://example.org/ev6", "snippet": "No documented episode where broad tariffs lowered the consumer basket short-term.", "credibility": 0.80 }
+  ],
+  "events": [
+    { "event": "case.filed", "case_id": "C-tariffs-001", "seq": 1, "ts": "2026-06-06T17:00:00Z", "round": 0, "act": 1,
+      "data": { "claim": "Tariffs lower domestic prices for consumers.", "source": "user", "user_prior": 0.5 } },
+
+    { "event": "subclaims.ready", "case_id": "C-tariffs-001", "seq": 2, "ts": "2026-06-06T17:00:06Z", "round": 0, "act": 1,
+      "data": { "subclaims": [
+        { "id": "sc1", "text": "Tariff costs are passed through to consumer prices.", "status": "open" },
+        { "id": "sc2", "text": "Reduced import competition leads domestic producers to lower prices.", "status": "open" },
+        { "id": "sc3", "text": "The net effect on the consumer price basket is a decrease.", "status": "open" },
+        { "id": "sc4", "text": "Short-term and long-term effects differ.", "status": "open" }
+      ] } },
+
+    { "event": "panel.cast", "case_id": "C-tariffs-001", "seq": 3, "ts": "2026-06-06T17:00:14Z", "round": 0, "act": 1,
+      "data": {
+        "axes_filled": { "proponent": 2, "opponent": 2, "affected": 2, "methodologist": 2, "ethicist": 2, "historian": 2 },
+        "devils_advocate": { "model": "gpt-4o", "name": "The Contrarian" },
+        "jurors": [
+          { "slot": "S1",  "model": "gpt-4o",      "disposition": "tol/prin/long/ref", "axis": "proponent",     "lens": "Strategic-Trade Economist",   "name": "Vega",   "voice": "infant-industry true believer", "stance_prior": 0.4,  "opening_question": "Doesn't domestic scale eventually undercut import prices?" },
+          { "slot": "S10", "model": "mistral-large","disposition": "tol/prin/long/ref", "axis": "proponent",     "lens": "Industrial-Policy Strategist", "name": "Brandt", "voice": "builder, capacity-first",        "stance_prior": 0.3,  "opening_question": "What's the price of dependence you're ignoring?" },
+          { "slot": "S3",  "model": "o-series",     "disposition": "av/emp/long/sq",    "axis": "opponent",      "lens": "Mainstream Trade Economist",   "name": "Okun",   "voice": "dry, citation-bound",            "stance_prior": -0.6, "opening_question": "Show me one basket where tariffs lowered CPI." },
+          { "slot": "S4",  "model": "gpt-4o-mini",  "disposition": "av/emp/near/sq",    "axis": "opponent",      "lens": "Retail Pricing Analyst",       "name": "Pell",   "voice": "shelf-price realist",            "stance_prior": -0.5, "opening_question": "Pass-through hits shelves in months — where's the offset?" },
+          { "slot": "S5",  "model": "llama-3.1-70b","disposition": "av/prin/near/ref",  "axis": "affected",      "lens": "Manufacturing-worker Advocate","name": "Reyes",  "voice": "shop-floor, jobs-first",         "stance_prior": 0.2,  "opening_question": "Cheaper for whom, if the plant's already gone?" },
+          { "slot": "S6",  "model": "phi-4",        "disposition": "av/emp/near/ref",   "axis": "affected",      "lens": "Household-budget Advocate",    "name": "Mott",   "voice": "cost-of-living, blunt",          "stance_prior": -0.3, "opening_question": "My grocery bill is the only basket I trust." },
+          { "slot": "S7",  "model": "o-series",     "disposition": "av/prin/long/sq",   "axis": "methodologist", "lens": "Econometric Skeptic",          "name": "Holm",   "voice": "identification-obsessed",        "stance_prior": 0.0,  "opening_question": "What's your counterfactual? Pass-through varies by sector." },
+          { "slot": "S8",  "model": "phi-4",        "disposition": "tol/emp/near/ref",  "axis": "methodologist", "lens": "Supply-chain Technologist",    "name": "Kade",   "voice": "data-over-theory",               "stance_prior": 0.0,  "opening_question": "Substitutability and inventory dynamics — show the curves." },
+          { "slot": "S9",  "model": "gpt-4o",       "disposition": "av/prin/long/ref",  "axis": "ethicist",      "lens": "Distributive-Justice Ethicist","name": "Soto",   "voice": "who-bears-the-cost",             "stance_prior": -0.2, "opening_question": "Tariffs are a regressive tax — is that 'lower prices'?" },
+          { "slot": "S12", "model": "gpt-4o-mini",  "disposition": "tol/emp/long/sq",   "axis": "ethicist",      "lens": "Political-Economy Ethicist",   "name": "Aldous", "voice": "sovereignty & forced-labor angle","stance_prior": 0.1,  "opening_question": "Cheapness built on coerced labor — at what moral price?" },
+          { "slot": "S2",  "model": "mistral-large","disposition": "tol/emp/near/sq",   "axis": "historian",     "lens": "Trade Historian",              "name": "Wren",   "voice": "Smoot-Hawley to 2018",           "stance_prior": -0.4, "opening_question": "Name the tariff that lowered consumer prices. I'll wait." },
+          { "slot": "S11", "model": "llama-3.1-70b","disposition": "av/prin/long/sq",   "axis": "historian",     "lens": "Comparative-Policy Historian", "name": "Ito",    "voice": "cross-country cases",            "stance_prior": -0.1, "opening_question": "South Korea vs. Argentina — same policy, opposite outcomes. Why?" }
+        ]
+      } },
+
+    { "event": "panel.balance", "case_id": "C-tariffs-001", "seq": 4, "ts": "2026-06-06T17:00:18Z", "round": 0, "act": 1,
+      "data": { "passed": true, "mean_stance_prior": -0.06, "axes_filled": { "proponent": 2, "opponent": 2, "affected": 2, "methodologist": 2, "ethicist": 2, "historian": 2 }, "retries": 0, "fell_back": false, "notes": "both stance signs present" } },
+
+    { "event": "evidence.ready", "case_id": "C-tariffs-001", "seq": 5, "ts": "2026-06-06T17:00:30Z", "round": 0, "act": 1,
+      "data": { "items": [
+        { "id": "ev1", "title": "Pass-through of tariffs to import prices (NBER, 2019)", "url": "https://www.nber.org/papers/example-ev1", "snippet": "Near-complete pass-through to US import prices.", "credibility": 0.88, "supports": ["sc1"] },
+        { "id": "ev2", "title": "BLS import & consumer price indices", "url": "https://www.bls.gov/cpi/example-ev2", "snippet": "Tariffed categories rose vs. untariffed.", "credibility": 0.85, "supports": ["sc1","sc3"] },
+        { "id": "ev3", "title": "Impact of the 2018 Trade War on US Prices", "url": "https://example.org/ev3", "snippet": "Incidence fell on US importers and consumers.", "credibility": 0.90, "supports": ["sc1","sc3"] },
+        { "id": "ev4", "title": "Infant-industry & scale effects: South Korea", "url": "https://example.org/ev4", "snippet": "Scale achieved; consumer-price effects mixed and slow.", "credibility": 0.70, "supports": ["sc2","sc4"] },
+        { "id": "ev5", "title": "Retail shelf-price tracking, 2018-2019", "url": "https://example.org/ev5", "snippet": "Shelf-price increases within 2-4 months.", "credibility": 0.78, "supports": ["sc1","sc3"] },
+        { "id": "ev6", "title": "Smoot-Hawley and consumer prices: historical review", "url": "https://example.org/ev6", "snippet": "No episode of broad tariffs lowering the basket short-term.", "credibility": 0.80, "supports": ["sc3"] }
+      ] } },
+
+    { "event": "round.blind.start", "case_id": "C-tariffs-001", "seq": 6, "ts": "2026-06-06T17:00:40Z", "round": 0, "act": 1, "data": {} },
+
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 7,  "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S1" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 8,  "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S10" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 9,  "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S3" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 10, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S4" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 11, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S5" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 12, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S6" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 13, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S7" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 14, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S8" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 15, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S9" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 16, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S12" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 17, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S2" } },
+    { "event": "juror.thinking", "case_id": "C-tariffs-001", "seq": 18, "ts": "2026-06-06T17:00:41Z", "round": 0, "act": 1, "data": { "juror_id": "S11" } },
+
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 19, "ts": "2026-06-06T17:01:05Z", "round": 0, "act": 1, "data": { "juror_id": "S1",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 20, "ts": "2026-06-06T17:01:06Z", "round": 0, "act": 1, "data": { "juror_id": "S10", "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 21, "ts": "2026-06-06T17:01:07Z", "round": 0, "act": 1, "data": { "juror_id": "S3",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 22, "ts": "2026-06-06T17:01:08Z", "round": 0, "act": 1, "data": { "juror_id": "S4",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 23, "ts": "2026-06-06T17:01:09Z", "round": 0, "act": 1, "data": { "juror_id": "S5",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 24, "ts": "2026-06-06T17:01:10Z", "round": 0, "act": 1, "data": { "juror_id": "S6",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 25, "ts": "2026-06-06T17:01:11Z", "round": 0, "act": 1, "data": { "juror_id": "S7",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 26, "ts": "2026-06-06T17:01:12Z", "round": 0, "act": 1, "data": { "juror_id": "S8",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 27, "ts": "2026-06-06T17:01:13Z", "round": 0, "act": 1, "data": { "juror_id": "S9",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 28, "ts": "2026-06-06T17:01:14Z", "round": 0, "act": 1, "data": { "juror_id": "S12", "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 29, "ts": "2026-06-06T17:01:15Z", "round": 0, "act": 1, "data": { "juror_id": "S2",  "sealed": true } },
+    { "event": "vote.cast", "case_id": "C-tariffs-001", "seq": 30, "ts": "2026-06-06T17:01:16Z", "round": 0, "act": 1, "data": { "juror_id": "S11", "sealed": true } },
+
+    { "event": "round.blind.reveal", "case_id": "C-tariffs-001", "seq": 31, "ts": "2026-06-06T17:01:30Z", "round": 0, "act": 1,
+      "data": { "tally": { "yes": 4, "no": 6, "abstain": 2 },
+        "per_juror": [
+          { "juror_id": "S1",  "vote": 1,  "confidence": 0.72 },
+          { "juror_id": "S10", "vote": 1,  "confidence": 0.68 },
+          { "juror_id": "S3",  "vote": -1, "confidence": 0.81 },
+          { "juror_id": "S4",  "vote": -1, "confidence": 0.74 },
+          { "juror_id": "S5",  "vote": 1,  "confidence": 0.55 },
+          { "juror_id": "S6",  "vote": -1, "confidence": 0.66 },
+          { "juror_id": "S7",  "vote": 0,  "confidence": 0.40 },
+          { "juror_id": "S8",  "vote": 0,  "confidence": 0.42 },
+          { "juror_id": "S9",  "vote": -1, "confidence": 0.58 },
+          { "juror_id": "S12", "vote": 1,  "confidence": 0.51 },
+          { "juror_id": "S2",  "vote": -1, "confidence": 0.70 },
+          { "juror_id": "S11", "vote": -1, "confidence": 0.52 }
+        ] } },
+
+    { "event": "consensus.update", "case_id": "C-tariffs-001", "seq": 32, "ts": "2026-06-06T17:01:32Z", "round": 0, "act": 1,
+      "data": { "score": -0.18, "label": "contested", "confidence": 0.41, "convergence": 0.22,
+        "per_subclaim": [
+          { "subclaim_id": "sc1", "score": -0.05, "confidence": 0.40 },
+          { "subclaim_id": "sc2", "score": 0.12,  "confidence": 0.35 },
+          { "subclaim_id": "sc3", "score": -0.30, "confidence": 0.44 },
+          { "subclaim_id": "sc4", "score": 0.05,  "confidence": 0.30 }
+        ] } },
+
+    { "event": "round.start", "case_id": "C-tariffs-001", "seq": 33, "ts": "2026-06-06T17:01:45Z", "round": 1, "act": 2,
+      "data": { "round": 1, "agenda": "Open the floor on sub-claim 1: does the tariff cost reach consumers?" } },
+
+    { "event": "floor.speaker", "case_id": "C-tariffs-001", "seq": 34, "ts": "2026-06-06T17:01:46Z", "round": 1, "act": 2, "data": { "juror_id": "S3" } },
+    { "event": "claim.made", "case_id": "C-tariffs-001", "seq": 35, "ts": "2026-06-06T17:01:52Z", "round": 1, "act": 2,
+      "data": { "juror_id": "S3", "text": "Pass-through to import prices was near-complete in 2018; consumers, not exporters, bore the cost.", "claim_ref": "cl-001", "subclaim_id": "sc1", "spans": [ { "id": "sp-001", "start": 0, "end": 56 } ] } },
+    { "event": "factcheck.result", "case_id": "C-tariffs-001", "seq": 36, "ts": "2026-06-06T17:01:55Z", "round": 1, "act": 2,
+      "data": { "claim_ref": "cl-001", "status": "supported", "citations": [ { "evidence_id": "ev1", "credibility": 0.88 }, { "evidence_id": "ev3", "credibility": 0.90 } ] } },
+
+    { "event": "floor.speaker", "case_id": "C-tariffs-001", "seq": 37, "ts": "2026-06-06T17:02:02Z", "round": 1, "act": 2, "data": { "juror_id": "S1" } },
+    { "event": "claim.made", "case_id": "C-tariffs-001", "seq": 38, "ts": "2026-06-06T17:02:10Z", "round": 1, "act": 2,
+      "data": { "juror_id": "S1", "text": "Short-run, sure — but protected domestic producers obviously scale up and drive prices below the old import level.", "claim_ref": "cl-002", "subclaim_id": "sc2", "spans": [ { "id": "sp-002", "start": 18, "end": 26 } ] } },
+    { "event": "bias.flag", "case_id": "C-tariffs-001", "seq": 39, "ts": "2026-06-06T17:02:12Z", "round": 1, "act": 2,
+      "data": { "juror_id": "S1", "type": "unsupported_certainty", "span_id": "sp-002", "severity": "low", "note": "'obviously' asserts a contested causal claim without evidence" } },
+    { "event": "factcheck.result", "case_id": "C-tariffs-001", "seq": 40, "ts": "2026-06-06T17:02:16Z", "round": 1, "act": 2,
+      "data": { "claim_ref": "cl-002", "status": "partial", "citations": [ { "evidence_id": "ev4", "credibility": 0.70 } ], "note": "Scale effects documented in some sectors; consumer-price decline is slow and not general." } },
+
+    { "event": "floor.speaker", "case_id": "C-tariffs-001", "seq": 41, "ts": "2026-06-06T17:02:24Z", "round": 1, "act": 2, "data": { "juror_id": "S4" } },
+    { "event": "claim.made", "case_id": "C-tariffs-001", "seq": 42, "ts": "2026-06-06T17:02:31Z", "round": 1, "act": 2,
+      "data": { "juror_id": "S4", "text": "Shelf-price tracking shows tariffed categories rose within 2-4 months. The 'later it falls' story never shows up in the data.", "claim_ref": "cl-003", "subclaim_id": "sc3", "spans": [ { "id": "sp-003", "start": 0, "end": 60 } ] } },
+    { "event": "factcheck.result", "case_id": "C-tariffs-001", "seq": 43, "ts": "2026-06-06T17:02:34Z", "round": 1, "act": 2,
+      "data": { "claim_ref": "cl-003", "status": "supported", "citations": [ { "evidence_id": "ev5", "credibility": 0.78 }, { "evidence_id": "ev2", "credibility": 0.85 } ] } },
+
+    { "event": "devils_advocate.attack", "case_id": "C-tariffs-001", "seq": 44, "ts": "2026-06-06T17:02:42Z", "round": 1, "act": 2,
+      "data": { "name": "The Contrarian", "target_consensus": "the emerging 'tariffs raise prices' view", "argument": "You're all assuming static supply chains. Firms reshore, automate, and renegotiate — your 2018 snapshot can't see the 5-year equilibrium.", "citations": [ { "evidence_id": "ev4", "credibility": 0.70 } ] } },
+    { "event": "bias.flag", "case_id": "C-tariffs-001", "seq": 45, "ts": "2026-06-06T17:02:44Z", "round": 1, "act": 2,
+      "data": { "juror_id": "DA", "type": "missing_context", "severity": "low", "note": "Long-run reshoring claim omits that the same studies find persistent net consumer cost." } },
+
+    { "event": "evidence.ready", "case_id": "C-tariffs-001", "seq": 46, "ts": "2026-06-06T17:02:50Z", "round": 1, "act": 2,
+      "data": { "for_subclaim": "sc2", "items": [ { "id": "ev4", "title": "Infant-industry & scale effects: South Korea", "url": "https://example.org/ev4", "snippet": "Scale achieved over years; consumer prices did not broadly fall below pre-tariff imports.", "credibility": 0.70, "supports": ["sc2","sc4"] } ] } },
+
+    { "event": "vote.shift", "case_id": "C-tariffs-001", "seq": 47, "ts": "2026-06-06T17:02:58Z", "round": 1, "act": 2,
+      "data": { "juror_id": "S8", "subclaim_id": "sc3", "from": 0, "to": -1, "confidence": 0.61, "delta_confidence": 0.19, "reason": "Shelf-price + import-index data resolves my uncertainty: net basket effect is up, not down.", "citations": [ { "evidence_id": "ev5" }, { "evidence_id": "ev2" } ] } },
+    { "event": "vote.shift", "case_id": "C-tariffs-001", "seq": 48, "ts": "2026-06-06T17:03:00Z", "round": 1, "act": 2,
+      "data": { "juror_id": "S7", "subclaim_id": "sc3", "from": 0, "to": -1, "confidence": 0.64, "delta_confidence": 0.24, "reason": "Identification holds across the cited studies; I can no longer abstain.", "citations": [ { "evidence_id": "ev3" } ] } },
+
+    { "event": "consensus.update", "case_id": "C-tariffs-001", "seq": 49, "ts": "2026-06-06T17:03:04Z", "round": 1, "act": 2,
+      "data": { "score": -0.34, "label": "leaning_false", "confidence": 0.55, "convergence": 0.44,
+        "per_subclaim": [
+          { "subclaim_id": "sc1", "score": -0.42, "confidence": 0.70 },
+          { "subclaim_id": "sc2", "score": 0.04,  "confidence": 0.46 },
+          { "subclaim_id": "sc3", "score": -0.48, "confidence": 0.62 },
+          { "subclaim_id": "sc4", "score": 0.10,  "confidence": 0.40 }
+        ] } },
+    { "event": "round.end", "case_id": "C-tariffs-001", "seq": 50, "ts": "2026-06-06T17:03:08Z", "round": 1, "act": 2, "data": { "round": 1, "converged": false, "stalled": false } },
+
+    { "event": "round.start", "case_id": "C-tariffs-001", "seq": 51, "ts": "2026-06-06T17:03:15Z", "round": 2, "act": 2,
+      "data": { "round": 2, "agenda": "Separate 'good for workers' from 'lowers prices'; weigh the historical record." } },
+
+    { "event": "floor.speaker", "case_id": "C-tariffs-001", "seq": 52, "ts": "2026-06-06T17:03:16Z", "round": 2, "act": 2, "data": { "juror_id": "S5" } },
+    { "event": "claim.made", "case_id": "C-tariffs-001", "seq": 53, "ts": "2026-06-06T17:03:24Z", "round": 2, "act": 2,
+      "data": { "juror_id": "S5", "text": "I voted yes for the plant and the paycheck. But the question is prices, and I have to admit those are two different things.", "claim_ref": "cl-004", "subclaim_id": "sc3", "spans": [] } },
+    { "event": "factcheck.result", "case_id": "C-tariffs-001", "seq": 54, "ts": "2026-06-06T17:03:27Z", "round": 2, "act": 2,
+      "data": { "claim_ref": "cl-004", "status": "partial", "citations": [], "note": "Employment effects are out of scope for the price claim; no price evidence asserted." } },
+
+    { "event": "floor.speaker", "case_id": "C-tariffs-001", "seq": 55, "ts": "2026-06-06T17:03:34Z", "round": 2, "act": 2, "data": { "juror_id": "S2" } },
+    { "event": "claim.made", "case_id": "C-tariffs-001", "seq": 56, "ts": "2026-06-06T17:03:42Z", "round": 2, "act": 2,
+      "data": { "juror_id": "S2", "text": "From Smoot-Hawley to 2018, there is no documented broad tariff that lowered the consumer basket short-term. None.", "claim_ref": "cl-005", "subclaim_id": "sc3", "spans": [] } },
+    { "event": "factcheck.result", "case_id": "C-tariffs-001", "seq": 57, "ts": "2026-06-06T17:03:45Z", "round": 2, "act": 2,
+      "data": { "claim_ref": "cl-005", "status": "supported", "citations": [ { "evidence_id": "ev6", "credibility": 0.80 } ] } },
+
+    { "event": "vote.shift", "case_id": "C-tariffs-001", "seq": 58, "ts": "2026-06-06T17:03:52Z", "round": 2, "act": 2,
+      "data": { "juror_id": "S5", "subclaim_id": "sc3", "from": 1, "to": 0, "confidence": 0.50, "delta_confidence": -0.05, "reason": "Conceding the price question while keeping my reservations about jobs.", "citations": [] } },
+    { "event": "vote.shift", "case_id": "C-tariffs-001", "seq": 59, "ts": "2026-06-06T17:03:54Z", "round": 2, "act": 2,
+      "data": { "juror_id": "S12", "subclaim_id": "sc3", "from": 1, "to": -1, "confidence": 0.57, "delta_confidence": 0.06, "reason": "The forced-labor cheapness angle is real but it's not a price decrease; the historical record is decisive.", "citations": [ { "evidence_id": "ev6" } ] } },
+
+    { "event": "consensus.update", "case_id": "C-tariffs-001", "seq": 60, "ts": "2026-06-06T17:03:58Z", "round": 2, "act": 2,
+      "data": { "score": -0.51, "label": "leaning_false", "confidence": 0.66, "convergence": 0.63,
+        "per_subclaim": [
+          { "subclaim_id": "sc1", "score": -0.55, "confidence": 0.78 },
+          { "subclaim_id": "sc2", "score": -0.05, "confidence": 0.52 },
+          { "subclaim_id": "sc3", "score": -0.66, "confidence": 0.74 },
+          { "subclaim_id": "sc4", "score": 0.12,  "confidence": 0.48 }
+        ] } },
+    { "event": "round.end", "case_id": "C-tariffs-001", "seq": 61, "ts": "2026-06-06T17:04:02Z", "round": 2, "act": 2, "data": { "round": 2, "converged": false, "stalled": false } },
+
+    { "event": "round.start", "case_id": "C-tariffs-001", "seq": 62, "ts": "2026-06-06T17:04:10Z", "round": 3, "act": 3,
+      "data": { "round": 3, "agenda": "Final pass: can the proponents defend a net price decrease, short- or long-term?" } },
+
+    { "event": "floor.speaker", "case_id": "C-tariffs-001", "seq": 63, "ts": "2026-06-06T17:04:11Z", "round": 3, "act": 3, "data": { "juror_id": "S1" } },
+    { "event": "claim.made", "case_id": "C-tariffs-001", "seq": 64, "ts": "2026-06-06T17:04:20Z", "round": 3, "act": 3,
+      "data": { "juror_id": "S1", "text": "I'll concede the short-term basket rises — the evidence is overwhelming. My case was always long-term capacity, and that's sub-claim 4, not the headline.", "claim_ref": "cl-006", "subclaim_id": "sc4", "spans": [] } },
+    { "event": "factcheck.result", "case_id": "C-tariffs-001", "seq": 65, "ts": "2026-06-06T17:04:23Z", "round": 3, "act": 3,
+      "data": { "claim_ref": "cl-006", "status": "partial", "citations": [ { "evidence_id": "ev4", "credibility": 0.70 } ], "note": "Long-term capacity effects plausible but not shown to lower the consumer basket below baseline." } },
+
+    { "event": "devils_advocate.attack", "case_id": "C-tariffs-001", "seq": 66, "ts": "2026-06-06T17:04:30Z", "round": 3, "act": 3,
+      "data": { "name": "The Contrarian", "target_consensus": "the now-dominant 'likely false' verdict", "argument": "Last stand: every study here is a US-2018 artifact. A different exchange-rate regime could flip the sign. You're over-generalizing from one episode.", "citations": [] } },
+
+    { "event": "vote.shift", "case_id": "C-tariffs-001", "seq": 67, "ts": "2026-06-06T17:04:38Z", "round": 3, "act": 3,
+      "data": { "juror_id": "S1", "subclaim_id": "sc3", "from": 1, "to": -1, "confidence": 0.69, "delta_confidence": -0.03, "reason": "On the actual claim — net consumer prices — I was wrong. The pass-through and historical evidence are decisive.", "citations": [ { "evidence_id": "ev1" }, { "evidence_id": "ev6" } ] } },
+
+    { "event": "turning_point", "case_id": "C-tariffs-001", "seq": 68, "ts": "2026-06-06T17:04:40Z", "round": 3, "act": 3,
+      "data": { "round": 3, "description": "Vega, the lead proponent, concedes the price claim — collapsing the 'yes' bloc to a single holdout.", "trigger": "majority_flip", "movers": ["S1"] } },
+
+    { "event": "consensus.update", "case_id": "C-tariffs-001", "seq": 69, "ts": "2026-06-06T17:04:44Z", "round": 3, "act": 3,
+      "data": { "score": -0.71, "label": "likely_false", "confidence": 0.78, "convergence": 0.88,
+        "per_subclaim": [
+          { "subclaim_id": "sc1", "score": -0.62, "confidence": 0.82 },
+          { "subclaim_id": "sc2", "score": -0.12, "confidence": 0.55 },
+          { "subclaim_id": "sc3", "score": -0.78, "confidence": 0.81 },
+          { "subclaim_id": "sc4", "score": 0.18,  "confidence": 0.52 }
+        ] } },
+    { "event": "round.end", "case_id": "C-tariffs-001", "seq": 70, "ts": "2026-06-06T17:04:48Z", "round": 3, "act": 3, "data": { "round": 3, "converged": true, "stalled": false } },
+
+    { "event": "verdict.final", "case_id": "C-tariffs-001", "seq": 71, "ts": "2026-06-06T17:05:00Z", "round": 3, "act": 4,
+      "data": {
+        "consensus": { "score": -0.71, "label": "likely_false" },
+        "confidence": 0.78,
+        "ece": 0.06,
+        "takeaway": "Tariffs rarely lower consumer prices, especially short-term: the cost is passed through to importers and households, and no broad historical episode shows the basket falling. A long-term domestic-capacity argument exists but was not shown to push net consumer prices below baseline.",
+        "per_subclaim": [
+          { "subclaim_id": "sc1", "verdict": "Costs are passed through to consumers — supported.", "confidence": 0.82, "citations": ["ev1","ev3","ev2"] },
+          { "subclaim_id": "sc2", "verdict": "Domestic producers lowering prices — not established.", "confidence": 0.55, "citations": ["ev4"] },
+          { "subclaim_id": "sc3", "verdict": "Net basket decrease — contradicted by evidence.", "confidence": 0.81, "citations": ["ev5","ev6","ev2"] },
+          { "subclaim_id": "sc4", "verdict": "Long- vs short-term effects differ — partially true, long-term unproven for prices.", "confidence": 0.52, "citations": ["ev4"] }
+        ],
+        "minority_report": [
+          { "jurors": ["S10"], "position": "Brandt holds that strategic capacity-building can lower prices on a 5-10 year horizon in specific sectors, a window the cited 2018 studies cannot observe.", "confidence": 0.61, "citations": ["ev4"] },
+          { "jurors": ["S1"], "position": "Vega, though conceding the price claim, preserves a long-term (sc4) caveat that domestic scale effects remain real if slow.", "confidence": 0.50, "citations": ["ev4"] }
+        ],
+        "bias_flags": [
+          { "type": "unsupported_certainty", "count": 1 },
+          { "type": "missing_context", "count": 1 }
+        ],
+        "citations": [
+          { "evidence_id": "ev1", "title": "Pass-through of tariffs to import prices (NBER, 2019)", "url": "https://www.nber.org/papers/example-ev1", "credibility": 0.88 },
+          { "evidence_id": "ev3", "title": "Impact of the 2018 Trade War on US Prices", "url": "https://example.org/ev3", "credibility": 0.90 },
+          { "evidence_id": "ev5", "title": "Retail shelf-price tracking, 2018-2019", "url": "https://example.org/ev5", "credibility": 0.78 },
+          { "evidence_id": "ev6", "title": "Smoot-Hawley and consumer prices: historical review", "url": "https://example.org/ev6", "credibility": 0.80 }
+        ],
+        "user_comparison": { "user_prior": 0.5, "room_final": -0.71, "moved": false }
+      } },
+
+    { "event": "case.closed", "case_id": "C-tariffs-001", "seq": 72, "ts": "2026-06-06T17:05:05Z", "round": 3, "act": 4,
+      "data": { "tape_uri": "cosmos://deliberations/C-tariffs-001/tape" } }
+  ]
+}

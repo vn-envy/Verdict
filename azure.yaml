@@ -1,0 +1,22 @@
+# azd project — provisions the backend footprint and (later) deploys services.
+# https://aka.ms/azd
+name: twelve-angry-agents
+metadata:
+  template: 12-angry-agents@v0.1
+
+# Infra is the focus for now (local-first orchestrator). Services are wired in
+# later when we deploy to Azure Container Apps.
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+# services:
+#   orchestrator:
+#     project: ./backend
+#     language: py
+#     host: containerapp
+#   web:
+#     project: .
+#     language: js
+#     host: containerapp

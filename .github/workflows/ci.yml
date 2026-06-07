@@ -1,0 +1,36 @@
+name: CI
+
+# Build + test on every push and PR. No Azure credentials needed: the frontend builds
+# and the deterministic Consensus Engine is unit-tested offline. (Live swarm integration
+# tests need Azure and run out of band.)
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Syntax-check all backend modules
+        run: python -m py_compile backend/*.py
+      - name: Unit-test the deterministic Consensus Engine
+        run: |
+          pip install --quiet pytest
+          python -m pytest backend/tests/test_consensus.py -q
