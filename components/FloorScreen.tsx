@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useEventStream, StreamSource } from "@/lib/useEventStream";
 import { CaseHeader } from "./CaseHeader";
 import { SpeakerSpotlight } from "./SpeakerSpotlight";
 import { FactCheckTicker } from "./FactCheckTicker";
 import { ConsensusMeter } from "./ConsensusMeter";
-import { JuryBox } from "./JuryBox";
+import { CouncilRail } from "./CouncilRail";
+import { Transcript } from "./Transcript";
 import { DevilsAdvocateCallout } from "./DevilsAdvocateCallout";
 import { TurningPointBanner } from "./TurningPointBanner";
-import { VerdictCard } from "./VerdictCard";
-import { ColdOpen } from "./ColdOpen";
+import { SynthesisModal } from "./SynthesisModal";
+import { OracleHub } from "./OracleHub";
 import { SealedBallot } from "./SealedBallot";
+import { ThemeToggle } from "./ThemeToggle";
 
 // The backend (FastAPI) base URL for live deliberations. Defaults to the deployed Azure
 // Container App; override via NEXT_PUBLIC_API_BASE for local dev (e.g. http://localhost:8000).
@@ -36,36 +39,53 @@ const STATUS_LABEL: Record<string, string> = {
   error: "● backend offline",
 };
 
+const PHASE_LABEL: Record<string, string> = {
+  setup: "EMPANELING",
+  blind: "SEALED BALLOT",
+  debate: "IN SESSION",
+  verdict: "SYNTHESIS",
+};
+
 export function FloorScreen() {
   const [sel, setSel] = useState(SOURCES[0].id);
   const source = (SOURCES.find((x) => x.id === sel) ?? SOURCES[0]).source;
   const s = useEventStream(source);
   const { state } = s;
 
+  // The Final Synthesis modal opens when the verdict lands; the user can dismiss it to
+  // review the chamber, and it re-opens for a new case/verdict.
+  const [showSynthesis, setShowSynthesis] = useState(false);
+  useEffect(() => {
+    if (state.phase === "verdict" && state.verdict) setShowSynthesis(true);
+  }, [state.phase, state.verdict]);
+  useEffect(() => {
+    setShowSynthesis(false);
+  }, [sel, s.cursor === 0]);
+
   return (
-    <main className="floor">
+    <main className="app">
       <div className="grain" aria-hidden />
       <div className="vignette" aria-hidden />
 
       <div className="masthead">
-        <span className="live">
-          <span className="live-dot" /> LIVE
-        </span>
+        {s.live ? (
+          <span className="live"><span className="live-dot" /> LIVE</span>
+        ) : (
+          <span className="live" style={{ color: "var(--muted)" }}>◷ REPLAY</span>
+        )}
         <span className="brand">
           VERDICT
-          <span className="brand-sub">12 Angry Agents · unbiased by construction</span>
+          <span className="brand-sub">The Oracle · Council of 12</span>
         </span>
-        <span className="masthead-right">
-          {state.phase === "verdict" ? "VERDICT IN" : state.round > 0 ? `ROUND ${state.round}` : "EMPANELING"}
-        </span>
+        <span className="masthead-spacer" />
+        <span className="masthead-right">{PHASE_LABEL[state.phase] ?? ""}{state.round > 0 && state.phase === "debate" ? ` · ROUND ${state.round}` : ""}</span>
+        <ThemeToggle />
       </div>
 
       <div className="transport">
         <select className="case-select" value={sel} onChange={(e) => setSel(e.target.value)}>
           {SOURCES.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.label}
-            </option>
+            <option key={c.id} value={c.id}>{c.label}</option>
           ))}
         </select>
         <button onClick={s.playing ? s.pause : s.play}>{s.playing ? "⏸ Pause" : "▶ Play"}</button>
@@ -82,57 +102,55 @@ export function FloorScreen() {
             <option value={3}>3×</option>
           </select>
         </label>
-        <input
-          className="scrub"
-          type="range"
-          min={0}
-          max={s.total}
-          value={s.cursor}
-          onChange={(e) => s.scrubTo(Number(e.target.value))}
-        />
-        <span className="muted">
-          {s.cursor}/{s.total}
-        </span>
+        <input className="scrub" type="range" min={0} max={s.total} value={s.cursor}
+          onChange={(e) => s.scrubTo(Number(e.target.value))} />
+        <span className="muted">{s.cursor}/{s.total}</span>
       </div>
 
-      <CaseHeader state={state} />
-      <TurningPointBanner state={state} />
+      {state.phase !== "setup" && <CaseHeader state={state} />}
+      {state.phase === "debate" && <TurningPointBanner state={state} />}
 
       {state.balance && (
         <div className={`balance-badge ${state.balance.passed ? "ok" : "fail"}`}>
-          {state.balance.passed ? "✓ Panel certified balanced" : "⚠ Panel fell back to default"}
+          {state.balance.passed ? "✓ Council certified balanced" : "⚠ Council fell back to default"}
           <span className="muted"> · mean prior {state.balance.mean_stance_prior.toFixed(2)}</span>
           {state.balance.notes && <span className="muted"> · {state.balance.notes}</span>}
         </div>
       )}
-
       {state.panelDisclosure && <div className="disclosure">⚖ {state.panelDisclosure}</div>}
 
-      {state.phase === "verdict" ? (
-        <VerdictCard state={state} />
-      ) : state.phase === "setup" ? (
-        <ColdOpen state={state} />
+      {state.phase === "setup" ? (
+        <OracleHub state={state} />
       ) : state.phase === "blind" ? (
         <SealedBallot state={state} />
       ) : (
-        <div className="floor-grid">
-          <div className="floor-main">
+        <div className="chamber">
+          <CouncilRail state={state} />
+          <div className="stage">
             <SpeakerSpotlight state={state} />
             <DevilsAdvocateCallout attack={state.daAttack} />
-            <FactCheckTicker state={state} />
+            <Transcript state={state} />
           </div>
-          <aside className="floor-side">
+          <div className="col">
             <ConsensusMeter consensus={state.consensus} />
-            <JuryBox state={state} />
+            <FactCheckTicker state={state} />
             {state.userPrior != null && (
               <div className="panel">
                 <div className="panel-title">Your Vote</div>
-                <div className="user-vote">{state.userPrior > 0 ? "TRUE" : "FALSE"} <span className="muted">(locked)</span></div>
+                <div className="user-vote">
+                  {state.userPrior > 0 ? "TRUE" : "FALSE"} <span className="muted">(locked)</span>
+                </div>
               </div>
             )}
-          </aside>
+          </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {showSynthesis && state.verdict && (
+          <SynthesisModal state={state} onClose={() => setShowSynthesis(false)} />
+        )}
+      </AnimatePresence>
     </main>
   );
 }

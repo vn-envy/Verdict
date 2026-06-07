@@ -17,5 +17,9 @@ __pycache__/
 *.pyc
 backend/.env
 backend/out/
+backend/eval/out/
 .pytest_cache/
 .env
+
+# Stray archives / exports
+*.zip

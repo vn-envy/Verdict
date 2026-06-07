@@ -13,8 +13,8 @@ export function FactCheckTicker({ state }: { state: CaseState }) {
   const rows = [...state.claims].reverse(); // newest first
 
   return (
-    <div className="ticker">
-      <div className="ticker-title">Live Fact-Check</div>
+    <div className="panel">
+      <div className="panel-title">Live Fact-Check</div>
       <div className="ticker-rows">
         {rows.length === 0 && <div className="muted">No claims on the floor yet.</div>}
         {rows.map((c) => {

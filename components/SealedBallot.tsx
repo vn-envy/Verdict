@@ -1,7 +1,7 @@
 "use client";
 
 import { CaseState } from "@/lib/reducer";
-import { Avatar } from "./Avatar";
+import { CouncilMark } from "./CouncilMark";
 
 // Act 1: The Sealed Ballot (blind round = anti-anchoring, dramatized).
 // Identities sealed in shadow while jurors reason alone; the reveal lights them up.
@@ -38,7 +38,7 @@ export function SealedBallot({ state }: { state: CaseState }) {
               key={j.slot}
               className={`booth ${revealed ? (v === 1 ? "yes" : v === -1 ? "no" : "abstain") : sealed ? "sealed" : thinking ? "thinking" : ""}`}
             >
-              <Avatar name={j.name} axis={j.axis} size={48} mystery={!revealed} />
+              <CouncilMark slot={j.slot} size={48} sealed={!revealed} vote={revealed ? v : undefined} />
               <div className="booth-info">
                 <div className="booth-name">{revealed ? j.name : "Juror sealed"}</div>
                 {revealed ? (

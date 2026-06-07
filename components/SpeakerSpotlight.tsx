@@ -1,12 +1,11 @@
 "use client";
 
 import { CaseState } from "@/lib/reducer";
-import { Avatar } from "./Avatar";
+import { CouncilMark } from "./CouncilMark";
 import { Typewriter } from "./Typewriter";
 
 export function SpeakerSpotlight({ state }: { state: CaseState }) {
   const juror = state.speaker ? state.jurorsBySlot[state.speaker] : undefined;
-  // latest claim by the current speaker
   const claim = [...state.claims].reverse().find((c) => c.juror_id === state.speaker);
   const flagsForSpeaker = state.flags.filter((f) => f.juror_id === state.speaker);
 
@@ -21,7 +20,7 @@ export function SpeakerSpotlight({ state }: { state: CaseState }) {
   return (
     <div className="spotlight">
       <div className="spotlight-head">
-        <Avatar name={juror.name} axis={juror.axis} size={92} speaking />
+        <CouncilMark slot={juror.slot} size={64} speaking />
         <div className="chyron">
           <span className="chyron-kicker">ON THE FLOOR</span>
           <span className="chyron-name">{juror.name}</span>

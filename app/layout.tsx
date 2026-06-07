@@ -13,6 +13,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <head>
+        {/* Apply saved Day/Night theme before paint to avoid a flash of the wrong theme. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('verdict-theme')==='day')document.documentElement.dataset.theme='day';}catch(e){}",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );
