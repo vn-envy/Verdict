@@ -66,6 +66,14 @@ class Foreman:
         await bus.emit("subclaims.ready", {"subclaims": subclaims}, round=0, act=1)
         sc_ids = [sc["id"] for sc in subclaims]
 
+        # Web/RAG grounding for custom claims that arrive without a seeded evidence base.
+        if not evidence:
+            from evidence import gather_evidence
+            try:
+                evidence = await gather_evidence(claim, subclaims)
+            except Exception:  # noqa: BLE001 — degrade to parametric reasoning, never break
+                evidence = []
+
         jurors, balance, da = await casting.cast_panel(reg, s, claim, subclaims, s.panel_size)
         axes_filled = {ax: sum(1 for j in jurors if j["axis"] == ax) for ax in casting.AXES}
         await bus.emit("panel.cast", {"axes_filled": axes_filled, "jurors": jurors,

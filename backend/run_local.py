@@ -29,6 +29,7 @@ OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 async def main() -> int:
     ap = argparse.ArgumentParser(description="Run a 12 Angry Agents deliberation locally.")
     ap.add_argument("--case", default="C", help="house case key: A | B | C")
+    ap.add_argument("--claim", default=None, help="a custom claim to adjudicate (web-grounded)")
     ap.add_argument("--panel", type=int, default=None, help="panel size (default from env/12)")
     ap.add_argument("--rounds", type=int, default=None, help="max debate rounds (default 3)")
     ap.add_argument("--cosmos", action="store_true", help="also persist the tape to Cosmos")
@@ -40,13 +41,17 @@ async def main() -> int:
     if args.rounds:
         settings = dataclasses.replace(settings, max_rounds=args.rounds)
 
-    case = load_case(args.case)
+    if args.claim:
+        from cases import custom_case
+        case = custom_case(args.claim)
+    else:
+        case = load_case(args.case)
     store = CosmosTapeStore(settings) if args.cosmos else None
     bus = EventBus(case["case_id"], persist=(store.append if store else None))
 
-    print(f"▶ running case {args.case}  panel={settings.panel_size}  rounds={settings.max_rounds}")
+    print(f"▶ running {case['case_id']}  panel={settings.panel_size}  rounds={settings.max_rounds}")
     print(f"  claim: {case['claim']}")
-    await run_case(args.case, settings, bus=bus, case=case)
+    await run_case(case["key"], settings, bus=bus, case=case)
     if store:
         await store.aclose()
 

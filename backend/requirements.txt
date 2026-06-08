@@ -21,3 +21,5 @@ azure-ai-inference==1.0.0b9
 pydantic>=2.7
 tenacity>=8.3
 jsonschema>=4.22
+# Web/RAG grounding (Evidence Gatherer) — async HTTP to the evidence provider (Wikipedia).
+aiohttp>=3.10

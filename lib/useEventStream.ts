@@ -14,7 +14,14 @@ const BASE_DELAY_MS = 850; // inter-seq delay at 1x for replay; pacing only — 
 
 export type StreamSource =
   | { mode: "replay"; url: string }
-  | { mode: "live"; apiBase: string; caseKey: string };
+  | {
+      mode: "live";
+      apiBase: string;
+      caseKey?: string;   // start a seeded house case
+      caseId?: string;    // OR attach to an already-started deliberation (no POST)
+      claim?: string;     // OR start a custom-claim deliberation
+      userPrior?: number; // participatory pre-vote for a custom claim
+    };
 
 export type StreamStatus = "idle" | "connecting" | "streaming" | "done" | "error";
 
@@ -36,7 +43,9 @@ export interface StreamControls {
 }
 
 function sourceKey(s: StreamSource): string {
-  return s.mode === "replay" ? `replay:${s.url}` : `live:${s.apiBase}:${s.caseKey}`;
+  return s.mode === "replay"
+    ? `replay:${s.url}`
+    : `live:${s.apiBase}:${s.caseId ?? s.claim ?? s.caseKey ?? ""}`;
 }
 
 export function useEventStream(source: StreamSource): StreamControls {
@@ -81,19 +90,27 @@ export function useEventStream(source: StreamSource): StreamControls {
         .catch(() => !cancelled && setStatus("error"));
     } else {
       setStatus("connecting");
-      const { apiBase, caseKey } = source;
+      const { apiBase, caseKey, caseId, claim, userPrior } = source;
       (async () => {
         try {
-          const res = await fetch(`${apiBase}/api/cases`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ case: caseKey }),
-          });
-          const { case_id, title: t } = await res.json();
-          if (cancelled) return;
-          setTitle(t ?? "");
+          let id = caseId;
+          let t = "";
+          if (!id) {
+            // Start a deliberation: a custom claim, else a seeded house case.
+            const body = claim ? { claim, user_prior: userPrior ?? 0 } : { case: caseKey };
+            const res = await fetch(`${apiBase}/api/cases`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            const j = await res.json();
+            id = j.case_id;
+            t = j.title ?? "";
+          }
+          if (cancelled || !id) return;
+          setTitle(t);
           const seen = new Set<number>();
-          const es = new EventSource(`${apiBase}/api/cases/${case_id}/stream`);
+          const es = new EventSource(`${apiBase}/api/cases/${id}/stream`);
           esRef.current = es;
           setStatus("streaming");
           es.onmessage = (m) => {

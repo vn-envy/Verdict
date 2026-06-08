@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Historical Archives - NEURAL_OS_v2.1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-primary": "#003907",
+                            "primary-fixed-dim": "#00e639",
+                            "primary-fixed": "#72ff70",
+                            "on-tertiary": "#00363d",
+                            "error-container": "#93000a",
+                            "on-primary-fixed-variant": "#00530e",
+                            "on-tertiary-container": "#006b78",
+                            "on-secondary-container": "#fff6fc",
+                            "on-primary-container": "#007117",
+                            "outline-variant": "#3b4b37",
+                            "surface-container-low": "#1c1b1b",
+                            "background": "#131313",
+                            "surface": "#131313",
+                            "surface-tint": "#00e639",
+                            "tertiary-container": "#7fecff",
+                            "on-surface-variant": "#b9ccb2",
+                            "secondary": "#ebb2ff",
+                            "error": "#ffb4ab",
+                            "on-tertiary-fixed-variant": "#004f58",
+                            "surface-container-lowest": "#0e0e0e",
+                            "primary-container": "#00ff41",
+                            "on-surface": "#e5e2e1",
+                            "inverse-primary": "#006e16",
+                            "on-error-container": "#ffdad6",
+                            "on-secondary-fixed": "#320047",
+                            "on-error": "#690005",
+                            "surface-variant": "#353534",
+                            "tertiary-fixed-dim": "#00daf3",
+                            "secondary-fixed-dim": "#ebb2ff",
+                            "tertiary": "#ecfcff",
+                            "secondary-fixed": "#f8d8ff",
+                            "on-secondary-fixed-variant": "#74009f",
+                            "surface-dim": "#131313",
+                            "primary": "#ebffe2",
+                            "surface-container-highest": "#353534",
+                            "on-background": "#e5e2e1",
+                            "outline": "#84967e",
+                            "inverse-surface": "#e5e2e1",
+                            "on-primary-fixed": "#002203",
+                            "surface-container": "#201f1f",
+                            "on-secondary": "#520072",
+                            "tertiary-fixed": "#9cf0ff",
+                            "on-tertiary-fixed": "#001f24",
+                            "surface-bright": "#3a3939",
+                            "inverse-on-surface": "#313030",
+                            "secondary-container": "#b600f8",
+                            "surface-container-high": "#2a2a2a"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "unit": "4px",
+                            "gutter": "16px",
+                            "margin": "24px",
+                            "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                            "label-md": [
+                                    "JetBrains Mono"
+                            ],
+                            "headline-lg": [
+                                    "Space Grotesk"
+                            ],
+                            "headline-xl": [
+                                    "Space Grotesk"
+                            ],
+                            "body-md": [
+                                    "JetBrains Mono"
+                            ],
+                            "headline-lg-mobile": [
+                                    "Space Grotesk"
+                            ],
+                            "code-sm": [
+                                    "JetBrains Mono"
+                            ]
+                    },
+                    "fontSize": {
+                            "label-md": [
+                                    "14px",
+                                    {
+                                            "lineHeight": "1",
+                                            "letterSpacing": "0.05em",
+                                            "fontWeight": "500"
+                                    }
+                            ],
+                            "headline-lg": [
+                                    "32px",
+                                    {
+                                            "lineHeight": "1.2",
+                                            "letterSpacing": "-0.02em",
+                                            "fontWeight": "700"
+                                    }
+                            ],
+                            "headline-xl": [
+                                    "48px",
+                                    {
+                                            "lineHeight": "1.1",
+                                            "letterSpacing": "-0.04em",
+                                            "fontWeight": "700"
+                                    }
+                            ],
+                            "body-md": [
+                                    "16px",
+                                    {
+                                            "lineHeight": "1.6",
+                                            "fontWeight": "400"
+                                    }
+                            ],
+                            "headline-lg-mobile": [
+                                    "24px",
+                                    {
+                                            "lineHeight": "1.2",
+                                            "fontWeight": "700"
+                                    }
+                            ],
+                            "code-sm": [
+                                    "12px",
+                                    {
+                                            "lineHeight": "1.4",
+                                            "fontWeight": "400"
+                                    }
+                            ]
+                    }
+            },
+                },
+        }
+    </script>
+<style>
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+        }
+        .scanlines {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .digital-rain {
+            background-image: radial-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background-color: #00ff41;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<div class="scanlines"></div>
+<!-- TopAppBar -->
+<header class="bg-background/80 backdrop-blur-xl fixed top-0 w-full border-b border-primary/30 shadow-[0_0_15px_rgba(0,230,57,0.1)] flex justify-between items-center px-gutter py-2 z-50">
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed tracking-tighter hidden md:block">
+            NEURAL_OS_v2.1
+        </div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed tracking-tighter md:hidden">
+            NEURAL_OS_v2.1
+        </div>
+<nav class="hidden md:flex gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2 py-1" href="#">Nodes</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2 py-1" href="#">Deliberation</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2 py-1" href="#">Log</a>
+<a class="font-label-md text-label-md text-primary-fixed border-b-2 border-primary-fixed pb-1 hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2" href="#">Archive</a>
+</nav>
+<div class="flex items-center gap-4 text-primary-fixed-dim">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-fixed transition-colors" data-icon="settings_input_component">settings_input_component</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-fixed transition-colors" data-icon="terminal">terminal</span>
+</div>
+</header>
+<div class="flex h-screen pt-[60px]">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-lowest/90 backdrop-blur-md fixed left-0 top-0 h-full w-64 border-r border-primary/20 flex flex-col pt-20 hidden md:flex z-40">
+<div class="px-6 mb-8">
+<div class="font-headline-lg text-headline-lg text-primary-fixed mb-1">ROOT_CORE</div>
+<div class="font-label-md text-label-md text-primary-fixed-dim opacity-80 mb-4">[SENSORS] STATUS: DELIBERATING</div>
+<button class="w-full border border-primary-fixed text-primary-fixed font-label-md text-label-md py-2 hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors duration-150">INITIATE_SCAN</button>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-3 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+                    [SENSORS]
+                </a>
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-3 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+                    [VECTORS]
+                </a>
+<a class="font-label-md text-label-md text-primary-fixed bg-primary/10 border-l-4 border-primary-fixed-dim flex items-center gap-3 px-4 py-3 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="waves">waves</span>
+                    [STREAMS]
+                </a>
+</nav>
+<div class="mt-auto border-t border-primary/20 p-4 flex flex-col gap-2">
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-2 py-2 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+                    REBOOT
+                </a>
+<a class="font-label-md text-label-md text-error flex items-center gap-3 px-2 py-2 opacity-80 hover:bg-error/10 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="power_settings_new">power_settings_new</span>
+                    SHUTDOWN
+                </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 p-margin overflow-y-auto digital-rain">
+<div class="max-w-container-max mx-auto space-y-8">
+<!-- Command Line Search -->
+<div class="bg-surface-container-low border border-primary-fixed/30 p-4 font-label-md text-label-md flex items-center shadow-[0_0_10px_rgba(0,230,57,0.05)]">
+<span class="text-primary-fixed-dim mr-2">QUERY_DB &gt;</span>
+<input class="bg-transparent border-none outline-none text-on-surface w-full focus:ring-0 p-0 font-label-md placeholder-on-surface-variant/50" placeholder="ENTER NODE_ID OR VERDICT_TYPE..." type="text" value="SELECT * FROM ARCHIVES WHERE STATUS = 'CRITICAL'"/>
+<span class="terminal-cursor"></span>
+</div>
+<!-- Stats Summary -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="border border-outline-variant p-4 flex flex-col justify-between h-24 bg-surface/50 backdrop-blur-sm">
+<span class="font-code-sm text-code-sm text-on-surface-variant">[ TOTAL_NODES ]</span>
+<span class="font-headline-lg text-headline-lg text-primary-fixed">14,092</span>
+</div>
+<div class="border border-secondary-fixed-dim/50 p-4 flex flex-col justify-between h-24 bg-surface/50 backdrop-blur-sm">
+<span class="font-code-sm text-code-sm text-secondary-fixed-dim">[ STALEMATES ]</span>
+<span class="font-headline-lg text-headline-lg text-secondary-fixed-dim">3,421</span>
+</div>
+<div class="border border-tertiary-fixed-dim/50 p-4 flex flex-col justify-between h-24 bg-surface/50 backdrop-blur-sm">
+<span class="font-code-sm text-code-sm text-tertiary-fixed-dim">[ RESOLUTIONS ]</span>
+<span class="font-headline-lg text-headline-lg text-tertiary-fixed-dim">9,805</span>
+</div>
+<div class="border border-error/50 p-4 flex flex-col justify-between h-24 bg-surface/50 backdrop-blur-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-error/5 animate-pulse"></div>
+<span class="font-code-sm text-code-sm text-error relative z-10">[ FAILURES ]</span>
+<span class="font-headline-lg text-headline-lg text-error relative z-10">866</span>
+</div>
+</div>
+<!-- Data Nodes Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Node: Resolution (Blue/Tertiary) -->
+<article class="border border-tertiary-fixed-dim p-4 flex flex-col gap-4 bg-surface-container-low hover:shadow-[0_0_15px_rgba(0,218,243,0.2)] transition-shadow cursor-crosshair group relative">
+<div class="absolute top-0 right-0 w-2 h-2 bg-tertiary-fixed-dim"></div>
+<header class="flex justify-between items-start border-b border-tertiary-fixed-dim/30 pb-2">
+<div>
+<h3 class="font-label-md text-label-md text-on-surface">NODE_A7X9</h3>
+<span class="font-code-sm text-code-sm text-tertiary-fixed-dim opacity-80">VERDICT: RESOLUTION</span>
+</div>
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-sm" data-icon="check_circle">check_circle</span>
+</header>
+<div class="h-20 border border-tertiary-fixed-dim/20 bg-surface flex items-center justify-center p-2 relative overflow-hidden">
+<!-- Mini viz placeholder -->
+<div class="w-full flex items-end gap-1 h-full opacity-60">
+<div class="w-1/6 bg-tertiary-fixed-dim h-1/4"></div>
+<div class="w-1/6 bg-tertiary-fixed-dim h-1/2"></div>
+<div class="w-1/6 bg-tertiary-fixed-dim h-3/4"></div>
+<div class="w-1/6 bg-tertiary-fixed-dim h-full"></div>
+<div class="w-1/6 bg-tertiary-fixed-dim h-2/3"></div>
+<div class="w-1/6 bg-tertiary-fixed-dim h-1/3"></div>
+</div>
+</div>
+<footer class="font-code-sm text-code-sm text-on-surface-variant flex justify-between mt-auto">
+<span>CYCLE: 4892</span>
+<span class="group-hover:text-tertiary-fixed-dim transition-colors">&gt; EXTRACT</span>
+</footer>
+</article>
+<!-- Node: Stalemate (Violet/Secondary) -->
+<article class="border border-secondary-fixed-dim p-4 flex flex-col gap-4 bg-surface-container-low hover:shadow-[0_0_15px_rgba(235,178,255,0.2)] transition-shadow cursor-crosshair group relative">
+<div class="absolute top-0 right-0 w-2 h-2 bg-secondary-fixed-dim"></div>
+<header class="flex justify-between items-start border-b border-secondary-fixed-dim/30 pb-2">
+<div>
+<h3 class="font-label-md text-label-md text-on-surface">NODE_B2V1</h3>
+<span class="font-code-sm text-code-sm text-secondary-fixed-dim opacity-80">VERDICT: STALEMATE</span>
+</div>
+<span class="material-symbols-outlined text-secondary-fixed-dim text-sm" data-icon="drag_handle">drag_handle</span>
+</header>
+<div class="h-20 border border-secondary-fixed-dim/20 bg-surface flex items-center justify-center p-2 relative overflow-hidden">
+<div class="w-full flex items-center justify-center gap-2 h-full opacity-60">
+<div class="w-8 h-8 rounded-full border-2 border-secondary-fixed-dim"></div>
+<div class="w-8 h-8 rounded-full border-2 border-secondary-fixed-dim"></div>
+</div>
+</div>
+<footer class="font-code-sm text-code-sm text-on-surface-variant flex justify-between mt-auto">
+<span>CYCLE: 4891</span>
+<span class="group-hover:text-secondary-fixed-dim transition-colors">&gt; EXTRACT</span>
+</footer>
+</article>
+<!-- Node: Failure (Red/Error) -->
+<article class="border border-error p-4 flex flex-col gap-4 bg-surface-container-low hover:shadow-[0_0_15px_rgba(255,180,171,0.2)] transition-shadow cursor-crosshair group relative">
+<div class="absolute top-0 right-0 w-2 h-2 bg-error animate-pulse"></div>
+<header class="flex justify-between items-start border-b border-error/30 pb-2">
+<div>
+<h3 class="font-label-md text-label-md text-on-surface">NODE_F9C4</h3>
+<span class="font-code-sm text-code-sm text-error opacity-80">VERDICT: SYS_FAILURE</span>
+</div>
+<span class="material-symbols-outlined text-error text-sm" data-icon="warning">warning</span>
+</header>
+<div class="h-20 border border-error/20 bg-surface flex items-center justify-center p-2 relative overflow-hidden">
+<div class="w-full h-1 bg-error/30 relative">
+<div class="absolute left-1/4 right-1/3 h-full bg-error animate-pulse"></div>
+</div>
+<div class="absolute text-error font-code-sm text-[10px] tracking-widest opacity-50">ERR_CORRUPTION</div>
+</div>
+<footer class="font-code-sm text-code-sm text-on-surface-variant flex justify-between mt-auto">
+<span>CYCLE: 4888</span>
+<span class="group-hover:text-error transition-colors">&gt; DIAGNOSE</span>
+</footer>
+</article>
+<!-- Node: Active Processing (Green/Primary) -->
+<article class="border border-primary-fixed p-4 flex flex-col gap-4 bg-surface-container-low hover:shadow-[0_0_15px_rgba(114,255,112,0.2)] transition-shadow cursor-crosshair group relative">
+<div class="absolute top-0 right-0 w-2 h-2 bg-primary-fixed"></div>
+<header class="flex justify-between items-start border-b border-primary-fixed/30 pb-2">
+<div>
+<h3 class="font-label-md text-label-md text-on-surface">NODE_T4L9</h3>
+<span class="font-code-sm text-code-sm text-primary-fixed opacity-80">STATUS: DELIBERATING</span>
+</div>
+<span class="material-symbols-outlined text-primary-fixed text-sm animate-spin" data-icon="sync">sync</span>
+</header>
+<div class="h-20 border border-primary-fixed/20 bg-surface flex items-center justify-center p-2 relative overflow-hidden">
+<div class="w-full flex gap-1 h-full opacity-60">
+<div class="flex-1 bg-primary-fixed/20 h-full border border-primary-fixed/40"></div>
+<div class="flex-1 bg-primary-fixed/20 h-full border border-primary-fixed/40"></div>
+<div class="flex-1 bg-primary-fixed/60 h-full border border-primary-fixed/80"></div>
+<div class="flex-1 bg-primary-fixed/20 h-full border border-primary-fixed/40"></div>
+</div>
+</div>
+<footer class="font-code-sm text-code-sm text-on-surface-variant flex justify-between mt-auto">
+<span>CYCLE: 4893</span>
+<span class="group-hover:text-primary-fixed transition-colors">&gt; OBSERVE</span>
+</footer>
+</article>
+</div>
+</div>
+</main>
+</div>
+</body></html>

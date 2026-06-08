@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Jury Room - Terminal Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#003907",
+                        "primary-fixed-dim": "#00e639",
+                        "primary-fixed": "#72ff70",
+                        "on-tertiary": "#00363d",
+                        "error-container": "#93000a",
+                        "on-primary-fixed-variant": "#00530e",
+                        "on-tertiary-container": "#006b78",
+                        "on-secondary-container": "#fff6fc",
+                        "on-primary-container": "#007117",
+                        "outline-variant": "#3b4b37",
+                        "surface-container-low": "#1c1b1b",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-tint": "#00e639",
+                        "tertiary-container": "#7fecff",
+                        "on-surface-variant": "#b9ccb2",
+                        "secondary": "#ebb2ff",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#004f58",
+                        "surface-container-lowest": "#0e0e0e",
+                        "primary-container": "#00ff41",
+                        "on-surface": "#e5e2e1",
+                        "inverse-primary": "#006e16",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#320047",
+                        "on-error": "#690005",
+                        "surface-variant": "#353534",
+                        "tertiary-fixed-dim": "#00daf3",
+                        "secondary-fixed-dim": "#ebb2ff",
+                        "tertiary": "#ecfcff",
+                        "secondary-fixed": "#f8d8ff",
+                        "on-secondary-fixed-variant": "#74009f",
+                        "surface-dim": "#131313",
+                        "primary": "#ebffe2",
+                        "surface-container-highest": "#353534",
+                        "on-background": "#e5e2e1",
+                        "outline": "#84967e",
+                        "inverse-surface": "#e5e2e1",
+                        "on-primary-fixed": "#002203",
+                        "surface-container": "#201f1f",
+                        "on-secondary": "#520072",
+                        "tertiary-fixed": "#9cf0ff",
+                        "on-tertiary-fixed": "#001f24",
+                        "surface-bright": "#3a3939",
+                        "inverse-on-surface": "#313030",
+                        "secondary-container": "#b600f8",
+                        "surface-container-high": "#2a2a2a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "margin": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["JetBrains Mono"],
+                        "headline-lg": ["Space Grotesk"],
+                        "headline-xl": ["Space Grotesk"],
+                        "body-md": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Space Grotesk"],
+                        "code-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "code-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Digital Rain Texture Overlay */
+        .bg-digital-rain {
+            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 65, 0.05) 25%, rgba(0, 255, 65, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, 0.05) 75%, rgba(0, 255, 65, 0.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 65, 0.05) 25%, rgba(0, 255, 65, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, 0.05) 75%, rgba(0, 255, 65, 0.05) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+        }
+        /* Scanlines Overlay */
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        /* Custom Neon Glows */
+        .glow-green { box-shadow: 0 0 10px rgba(0, 230, 57, 0.5); }
+        .glow-violet { box-shadow: 0 0 15px rgba(182, 0, 248, 0.6); border-color: #b600f8; }
+        .glow-blue { box-shadow: 0 0 15px rgba(0, 218, 243, 0.6); border-color: #00daf3; }
+        
+        /* Clock Font Base (using Space Grotesk for chunky numbers if a digital font isn't available) */
+        .digital-clock {
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* Blinking cursor */
+        .blinking-cursor {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen overflow-hidden flex flex-col scanlines relative selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar (Web & Mobile Hybrid Setup, hiding links on mobile as per logic) -->
+<nav class="hidden md:flex justify-between items-center px-gutter py-2 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-primary/30 shadow-[0_0_15px_rgba(0,230,57,0.1)] fixed top-0 w-full">
+<div class="font-headline-lg text-headline-lg text-primary-fixed tracking-tighter">
+            NEURAL_OS_v2.1
+        </div>
+<div class="flex items-center gap-6">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70" href="#">Nodes</a>
+<a class="font-label-md text-label-md text-primary-fixed border-b-2 border-primary-fixed pb-1 hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70" href="#">Deliberation</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70" href="#">Log</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70" href="#">Archive</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary-fixed-dim cursor-pointer hover:text-primary-fixed transition-colors">settings_input_component</span>
+<span class="material-symbols-outlined text-primary-fixed-dim cursor-pointer hover:text-primary-fixed transition-colors">terminal</span>
+</div>
+</nav>
+<!-- TopAppBar (Mobile Fallback - Simple Header) -->
+<nav class="md:hidden flex justify-between items-center px-gutter py-4 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-primary/30 fixed top-0 w-full">
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed tracking-tighter">
+            NEURAL_OS_v2.1
+        </div>
+<span class="material-symbols-outlined text-primary-fixed-dim">terminal</span>
+</nav>
+<!-- Main Content Area with SideNavBar -->
+<div class="flex flex-1 pt-[64px] h-full">
+<!-- SideNavBar (Desktop only, hidden on mobile) -->
+<aside class="hidden md:flex flex-col h-full pt-20 bg-surface-container-lowest/90 backdrop-blur-md fixed left-0 top-0 w-64 border-r border-primary/20 z-40">
+<div class="px-6 mb-8">
+<div class="w-12 h-12 bg-surface-variant border border-primary/30 rounded flex items-center justify-center mb-4 overflow-hidden relative group cursor-pointer">
+<!-- Abstract Placeholder for Avatar -->
+<div class="absolute inset-0 bg-digital-rain opacity-50 group-hover:opacity-100 transition-opacity"></div>
+<span class="material-symbols-outlined text-primary-fixed z-10" style="font-variation-settings: 'FILL' 1;">account_tree</span>
+</div>
+<div class="font-label-md text-label-md text-primary-fixed">[ ROOT_CORE ]</div>
+<div class="font-code-sm text-code-sm text-primary-fixed-dim mt-1 opacity-70 blinking-cursor">&gt; STATUS: DELIBERATING_</div>
+<button class="mt-6 w-full py-2 px-4 border border-primary-container text-primary-fixed font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors relative overflow-hidden group">
+<span class="relative z-10">INITIATE_SCAN</span>
+<div class="absolute inset-0 bg-primary-container/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+</button>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-3 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined">sensors</span>
+                    [SENSORS]
+                </a>
+<a class="font-label-md text-label-md text-primary-fixed bg-primary/10 border-l-4 border-primary-fixed-dim flex items-center gap-3 px-4 py-3 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">architecture</span>
+                    [VECTORS]
+                </a>
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-3 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined">waves</span>
+                    [STREAMS]
+                </a>
+</nav>
+<div class="mt-auto border-t border-primary/20 pt-4 pb-6 flex flex-col gap-2">
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-2 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined">refresh</span>
+                    REBOOT
+                </a>
+<a class="font-label-md text-label-md text-error flex items-center gap-3 px-4 py-2 opacity-80 hover:bg-error/10 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined">power_settings_new</span>
+                    SHUTDOWN
+                </a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-64 p-gutter md:p-margin bg-digital-rain relative z-10 overflow-y-auto h-full flex flex-col">
+<!-- Context Header -->
+<header class="mb-8 flex justify-between items-end border-b border-primary/20 pb-4">
+<div>
+<h1 class="font-headline-xl text-headline-xl text-primary-fixed tracking-tighter">JURY_TERMINAL</h1>
+<p class="font-code-sm text-code-sm text-primary-fixed-dim mt-2 opacity-80">&gt; DELIBERATION_PROTOCOL_ACTIVE // WAITING_FOR_INPUT</p>
+</div>
+<div class="hidden lg:block font-label-md text-label-md text-on-surface-variant border border-outline-variant px-3 py-1 bg-surface-container-low">
+                    [ SYS_LOAD: 84% ]
+                </div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+<!-- Centerpiece: Countdown Clock (Spans 8 cols on large screens) -->
+<div class="lg:col-span-8 bg-surface-container-lowest/80 backdrop-blur-xl border border-primary/30 p-8 flex flex-col items-center justify-center relative glow-green h-64 lg:h-auto">
+<div class="absolute top-4 left-4 font-code-sm text-code-sm text-primary-fixed-dim opacity-50">
+                        // TIME_TO_REBOOT_VERDICT
+                    </div>
+<div class="absolute top-4 right-4 flex gap-1">
+<div class="w-2 h-2 bg-primary-fixed rounded-full animate-pulse"></div>
+<div class="w-2 h-2 bg-primary-fixed-dim rounded-full"></div>
+<div class="w-2 h-2 bg-surface-variant rounded-full"></div>
+</div>
+<div class="font-headline-xl text-[64px] lg:text-[120px] text-primary-container tracking-tighter digital-clock leading-none" id="countdown" style="text-shadow: 0 0 20px rgba(0, 255, 65, 0.8);">
+                        04:19:58
+                    </div>
+<div class="mt-4 font-label-md text-label-md text-primary-fixed-dim opacity-80 border border-primary-fixed-dim/30 px-4 py-1">
+                        [ STATUS: CRITICAL_COUNTDOWN ]
+                    </div>
+</div>
+<!-- Logic Map: Argument State (Spans 4 cols) -->
+<div class="lg:col-span-4 bg-surface-container-low/60 backdrop-blur-md border border-primary/20 p-6 flex flex-col h-64 lg:h-auto">
+<div class="font-label-md text-label-md text-on-surface-variant border-b border-primary/20 pb-2 mb-4">
+                        &gt; LOGIC_STATE_TOPOLOGY
+                    </div>
+<div class="flex-1 flex items-center justify-center relative">
+<!-- Abstract Geometric Representation of Logic -->
+<div class="w-32 h-32 border border-primary-fixed/40 rounded-full relative animate-[spin_10s_linear_infinite]">
+<div class="absolute top-0 left-1/2 w-4 h-4 bg-secondary-container -translate-x-1/2 -translate-y-1/2 glow-violet rotate-45"></div>
+<div class="absolute bottom-0 left-1/2 w-4 h-4 bg-tertiary-fixed -translate-x-1/2 translate-y-1/2 glow-blue rotate-45"></div>
+<div class="absolute top-1/2 left-0 w-3 h-3 bg-primary-fixed -translate-x-1/2 -translate-y-1/2"></div>
+<div class="absolute top-1/2 right-0 w-3 h-3 bg-primary-fixed translate-x-1/2 -translate-y-1/2"></div>
+</div>
+<!-- Inner Core -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-16 h-16 border-2 border-primary-fixed-dim rounded-none flex items-center justify-center bg-background/50">
+<span class="material-symbols-outlined text-primary-fixed text-3xl">hub</span>
+</div>
+</div>
+</div>
+<div class="mt-4 flex justify-between font-code-sm text-code-sm text-primary-fixed-dim">
+<span>COHESION: 72%</span>
+<span>DIVERGENCE: LOW</span>
+</div>
+</div>
+<!-- Action Modules: Voting & Injection -->
+<div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+<!-- Cast Vote Button Module -->
+<button class="bg-surface-container/50 backdrop-blur-sm border border-secondary-container/50 p-8 flex flex-col items-center justify-center hover:bg-secondary-container/10 transition-all group glow-violet cursor-pointer relative overflow-hidden h-48">
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJ0cmFuc3BhcmVudCIvPgo8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMC41IiBmaWxsPSJyZ2JhKDE4MiwgMCwgMjQ4LCAwLjIpIi8+Cjwvc3ZnPg==')] opacity-30"></div>
+<span class="material-symbols-outlined text-secondary-container text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">how_to_vote</span>
+<div class="font-headline-lg text-headline-lg text-secondary-container tracking-tight">
+                            CAST VOTE
+                        </div>
+<div class="font-code-sm text-code-sm text-on-surface-variant mt-2 opacity-60">
+                            &gt; EXECUTE_FINAL_DECISION
+                        </div>
+</button>
+<!-- Inject Data Button Module -->
+<button class="bg-surface-container/50 backdrop-blur-sm border border-tertiary-fixed-dim/50 p-8 flex flex-col items-center justify-center hover:bg-tertiary-fixed-dim/10 transition-all group glow-blue cursor-pointer relative overflow-hidden h-48">
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJ0cmFuc3BhcmVudCIvPgo8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMC41IiBmaWxsPSJyZ2JhKDAsIDIxOCwgMjQzLCAwLjIpIi8+Cjwvc3ZnPg==')] opacity-30"></div>
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">data_exploration</span>
+<div class="font-headline-lg text-headline-lg text-tertiary-fixed-dim tracking-tight">
+                            INJECT DATA
+                        </div>
+<div class="font-code-sm text-code-sm text-on-surface-variant mt-2 opacity-60">
+                            &gt; APPEND_NEW_VARIABLES
+                        </div>
+</button>
+</div>
+<!-- Telemetry Readout (Bottom Spanner) -->
+<div class="lg:col-span-12 mt-2 bg-surface-container-lowest border-t border-primary/30 p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div class="flex gap-4">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant">NODE_ALPHA</span>
+<div class="flex items-center gap-1 mt-1">
+<div class="h-2 w-8 bg-primary-fixed border border-primary-fixed"></div>
+<div class="h-2 w-8 bg-primary-fixed border border-primary-fixed"></div>
+<div class="h-2 w-8 bg-background border border-primary-fixed"></div>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant">NODE_BETA</span>
+<div class="flex items-center gap-1 mt-1">
+<div class="h-2 w-8 bg-tertiary-fixed-dim border border-tertiary-fixed-dim"></div>
+<div class="h-2 w-8 bg-background border border-tertiary-fixed-dim"></div>
+<div class="h-2 w-8 bg-background border border-tertiary-fixed-dim"></div>
+</div>
+</div>
+</div>
+<div class="font-label-md text-label-md text-primary-fixed bg-primary-fixed/10 px-3 py-1 border border-primary-fixed/30">
+                        [ NETWORK_SECURE ]
+                     </div>
+</div>
+</div>
+</main>
+</div>
+<!-- Simple JS to keep the clock ticking -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const clockEl = document.getElementById('countdown');
+            if(clockEl) {
+                setInterval(() => {
+                    // Just randomly fluctuating the seconds a bit to simulate a live countdown
+                    // In a real app, this would be a proper Date calculation
+                    let currentText = clockEl.innerText;
+                    let parts = currentText.split(':');
+                    if(parts.length === 3) {
+                        let s = parseInt(parts[2]);
+                        s--;
+                        if(s < 0) s = 59;
+                        parts[2] = s < 10 ? '0'+s : s;
+                        clockEl.innerText = parts.join(':');
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body></html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Live Deliberation Stage</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#003907",
+                        "primary-fixed-dim": "#00e639",
+                        "primary-fixed": "#72ff70",
+                        "on-tertiary": "#00363d",
+                        "error-container": "#93000a",
+                        "on-primary-fixed-variant": "#00530e",
+                        "on-tertiary-container": "#006b78",
+                        "on-secondary-container": "#fff6fc",
+                        "on-primary-container": "#007117",
+                        "outline-variant": "#3b4b37",
+                        "surface-container-low": "#1c1b1b",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-tint": "#00e639",
+                        "tertiary-container": "#7fecff",
+                        "on-surface-variant": "#b9ccb2",
+                        "secondary": "#ebb2ff",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#004f58",
+                        "surface-container-lowest": "#0e0e0e",
+                        "primary-container": "#00ff41",
+                        "on-surface": "#e5e2e1",
+                        "inverse-primary": "#006e16",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#320047",
+                        "on-error": "#690005",
+                        "surface-variant": "#353534",
+                        "tertiary-fixed-dim": "#00daf3",
+                        "secondary-fixed-dim": "#ebb2ff",
+                        "tertiary": "#ecfcff",
+                        "secondary-fixed": "#f8d8ff",
+                        "on-secondary-fixed-variant": "#74009f",
+                        "surface-dim": "#131313",
+                        "primary": "#ebffe2",
+                        "surface-container-highest": "#353534",
+                        "on-background": "#e5e2e1",
+                        "outline": "#84967e",
+                        "inverse-surface": "#e5e2e1",
+                        "on-primary-fixed": "#002203",
+                        "surface-container": "#201f1f",
+                        "on-secondary": "#520072",
+                        "tertiary-fixed": "#9cf0ff",
+                        "on-tertiary-fixed": "#001f24",
+                        "surface-bright": "#3a3939",
+                        "inverse-on-surface": "#313030",
+                        "secondary-container": "#b600f8",
+                        "surface-container-high": "#2a2a2a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "margin": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["JetBrains Mono"],
+                        "headline-lg": ["Space Grotesk"],
+                        "headline-xl": ["Space Grotesk"],
+                        "body-md": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Space Grotesk"],
+                        "code-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "code-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            color: #e5e2e1;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .scanline {
+            width: 100%;
+            height: 100vh;
+            z-index: 9999;
+            position: fixed;
+            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at center, #001f0a 0%, #000000 70%);
+            opacity: 0.8;
+        }
+
+        .data-cluster {
+            backdrop-filter: blur(12px);
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .data-cluster::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 65, 0.05) 25%, rgba(0, 255, 65, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, 0.05) 75%, rgba(0, 255, 65, 0.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 65, 0.05) 25%, rgba(0, 255, 65, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 65, 0.05) 75%, rgba(0, 255, 65, 0.05) 76%, transparent 77%, transparent);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.2;
+        }
+
+        .data-cluster > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .glow-border {
+            border: 1px solid #00FF41;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.4), inset 0 0 8px rgba(0, 255, 65, 0.2);
+        }
+
+        .blinking-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background-color: #00FF41;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .pulse-bar {
+            height: 100%;
+            background-color: #00FF41;
+            animation: pulse-width 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 10px #00FF41;
+        }
+        
+        .pulse-bar-secondary {
+            height: 100%;
+            background-color: #ebb2ff;
+            animation: pulse-width-alt 3s ease-in-out infinite alternate;
+            box-shadow: 0 0 10px #ebb2ff;
+        }
+
+        @keyframes pulse-width {
+            0% { width: 30%; }
+            100% { width: 95%; }
+        }
+        
+        @keyframes pulse-width-alt {
+            0% { width: 40%; }
+            100% { width: 85%; }
+        }
+
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background-color: #000;
+            border-top: 1px solid #00FF41;
+            padding-left: 100%;
+            box-sizing: content-box;
+            white-space: nowrap;
+        }
+
+        .ticker {
+            display: inline-block;
+            height: 2rem;
+            line-height: 2rem;
+            white-space: nowrap;
+            padding-right: 100%;
+            box-sizing: content-box;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            animation-name: ticker;
+            animation-duration: 30s;
+        }
+
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased">
+<div class="scanline"></div>
+<div class="matrix-bg" id="matrix-canvas-container"></div>
+<!-- TopAppBar from JSON -->
+<header class="bg-background/80 backdrop-blur-xl fixed top-0 w-full border-b border-primary/30 shadow-[0_0_15px_rgba(0,230,57,0.1)] flex justify-between items-center px-gutter py-2 z-50">
+<div class="flex items-center gap-6">
+<h1 class="hidden md:block font-headline-lg text-headline-lg text-primary-fixed tracking-tighter">NEURAL_OS_v2.1</h1>
+<h1 class="md:hidden font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed tracking-tighter">NEURAL_OS_v2.1</h1>
+<nav class="hidden md:flex gap-6 items-center ml-8">
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2 py-1" href="#">[ Nodes ]</a>
+<a class="font-label-md text-label-md text-primary-fixed border-b-2 border-primary-fixed pb-1 hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2 py-1" href="#">&gt; Deliberation_</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2 py-1" href="#">[ Log ]</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors cursor-pointer active:opacity-70 px-2 py-1" href="#">[ Archive ]</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 text-primary-fixed-dim">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors p-1" data-icon="settings_input_component">settings_input_component</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary-fixed-dim hover:bg-primary/10 transition-colors p-1" data-icon="terminal">terminal</span>
+</div>
+</header>
+<!-- SideNavBar from JSON -->
+<aside class="hidden md:flex flex-col bg-surface-container-lowest/90 backdrop-blur-md fixed left-0 top-0 h-full w-64 border-r border-primary/20 pt-20 z-40">
+<div class="px-6 mb-8 mt-4">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 border border-primary-fixed flex items-center justify-center bg-black">
+<span class="material-symbols-outlined text-primary-fixed">memory</span>
+</div>
+<div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed tracking-tight">ROOT_CORE</div>
+<div class="font-code-sm text-code-sm text-primary-fixed-dim opacity-80">&gt; STATUS: DELIBERATING</div>
+</div>
+</div>
+<button class="w-full mt-4 border border-primary-fixed text-primary-fixed font-label-md text-label-md py-2 hover:bg-primary-fixed hover:text-black transition-all glow-border">
+                &gt; INITIATE_SCAN
+            </button>
+</div>
+<nav class="flex-1 flex flex-col gap-1 w-full">
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-3 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+                [SENSORS]
+            </a>
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-3 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="architecture">architecture</span>
+                [VECTORS]
+            </a>
+<a class="font-label-md text-label-md text-primary-fixed bg-primary/10 border-l-4 border-primary-fixed-dim flex items-center gap-3 px-4 py-3 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="waves">waves</span>
+                [STREAMS]
+            </a>
+</nav>
+<div class="mt-auto mb-6 w-full flex flex-col gap-1">
+<div class="border-t border-primary/20 mb-2 mx-4"></div>
+<a class="font-label-md text-label-md text-on-surface-variant flex items-center gap-3 px-4 py-3 opacity-60 hover:bg-primary/5 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+                REBOOT
+            </a>
+<a class="font-label-md text-label-md text-error flex items-center gap-3 px-4 py-3 opacity-80 hover:bg-error/10 hover:opacity-100 transition-all active:scale-95 duration-75" href="#">
+<span class="material-symbols-outlined" data-icon="power_settings_new">power_settings_new</span>
+                SHUTDOWN
+            </a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="pt-[72px] md:pl-64 min-h-screen flex flex-col relative z-10">
+<!-- Live Deliberation Stage -->
+<div class="flex-1 p-gutter md:p-margin flex flex-col gap-margin">
+<!-- Central Cinematic Area -->
+<section class="relative w-full h-[409px] md:h-[512px] data-cluster glow-border flex items-center justify-center bg-black/80">
+<img alt="AI Deliberation Matrix" class="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-screen" data-alt="A highly complex, glowing neon wireframe mesh depicting two abstract AI entities or neural network structures facing each other in a dark, infinite cyberspace void. The left entity pulses with bright cyan and matrix green energy lines, while the right entity glows with deep violet and electric blue. The setting is a minimalist, pitch-black digital terminal space resembling a high-tech hacker interface. The visual style is late-90s cyberpunk combined with modern data visualization, featuring sharp geometric lines, digital noise, and stark luminance against the absolute black background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOWD0G9IdeLEfrbfmI5aZFU9lp7glEvAJRQT_jbxcH6icl_bvysFcYJzHJQpiiiHgZdqCzLxU4hPajKGd5JdRUgFzvEwwlYrZRqJ0WX0ZX9gRzPvJ45OIBj7FesVI2qGDO2FLO7tTuaDzHJjnz7hxSyFcUSVOMvECoElqKDxf05ZsI584NCmHUuVJw5_A5UOBgOD0bIwJF0Vbcn6Cm2N-lcU7-UpliyvmFASC-GkWwAZE0ExdNvgZkEfXHiS9n7RFN7Wq9-p2yoUXb"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-80"></div>
+<div class="z-10 flex flex-col items-center">
+<div class="font-code-sm text-code-sm text-primary-fixed-dim tracking-widest mb-2 opacity-70">[ LIVE THREAD COLLISION ]</div>
+<div class="font-headline-xl text-headline-xl text-primary-fixed text-center drop-shadow-[0_0_15px_rgba(114,255,112,0.8)]">
+                        DELIBERATION_SYNC<span class="blinking-cursor"></span>
+</div>
+</div>
+</section>
+<!-- Agent Logic Panels -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-gutter md:gap-margin h-full flex-1">
+<!-- Left Panel: AGENT_ALPHA -->
+<div class="data-cluster p-6 flex flex-col gap-4 h-[400px]">
+<div class="flex justify-between items-start border-b border-primary-fixed/30 pb-2">
+<div>
+<h2 class="font-label-md text-label-md text-primary-fixed">&gt; AGENT_ALPHA</h2>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-1">LOGIC_NODE: 0x7F4A</p>
+</div>
+<span class="font-code-sm text-code-sm text-primary-fixed-dim bg-primary-fixed/10 px-2 py-1 border border-primary-fixed/50">[ ACTIVE ]</span>
+</div>
+<div class="flex-1 overflow-hidden flex flex-col gap-3 mt-2">
+<div class="font-code-sm text-code-sm text-primary-fixed/80">
+                            &gt; Evaluating parameter set A...<br/>
+                            &gt; Optimization threshold met at 94.2%<br/>
+                            &gt; Executing subroutine [HEURISTIC_SEARCH]<br/>
+                            &gt; Conflict detected in sector 4. Resolving...
+                        </div>
+<div class="mt-auto flex flex-col gap-4">
+<div>
+<div class="flex justify-between font-code-sm text-code-sm text-primary-fixed-dim mb-1">
+<span>CPU_CYCLES</span>
+<span>89%</span>
+</div>
+<div class="w-full h-2 bg-surface-container border border-primary-fixed/30">
+<div class="pulse-bar" style="animation-delay: 0s;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-code-sm text-code-sm text-tertiary-fixed-dim mb-1">
+<span>MEMORY_ALLOC</span>
+<span>62%</span>
+</div>
+<div class="w-full h-2 bg-surface-container border border-tertiary-fixed-dim/30">
+<div class="h-full bg-tertiary-fixed-dim shadow-[0_0_10px_#00daf3]" style="width: 62%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel: AGENT_BETA -->
+<div class="data-cluster p-6 flex flex-col gap-4 h-[400px]">
+<div class="flex justify-between items-start border-b border-secondary/30 pb-2">
+<div>
+<h2 class="font-label-md text-label-md text-secondary">&gt; AGENT_BETA</h2>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-1">SENTIMENT_NODE: 0x2B9C</p>
+</div>
+<span class="font-code-sm text-code-sm text-secondary bg-secondary/10 px-2 py-1 border border-secondary/50">[ ACTIVE ]</span>
+</div>
+<div class="flex-1 overflow-hidden flex flex-col gap-3 mt-2">
+<div class="font-code-sm text-code-sm text-secondary/80">
+                            &gt; Analyzing sentiment variance...<br/>
+                            &gt; Emotional resonance at 78.4% (STABLE)<br/>
+                            &gt; Counter-proposal generated for sector 4<br/>
+                            &gt; Awaiting sync confirmation from Alpha...
+                        </div>
+<div class="mt-auto flex flex-col gap-4">
+<div>
+<div class="flex justify-between font-code-sm text-code-sm text-secondary mb-1">
+<span>RESONANCE</span>
+<span>78%</span>
+</div>
+<div class="w-full h-2 bg-surface-container border border-secondary/30">
+<div class="pulse-bar-secondary" style="animation-delay: 0.5s;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-code-sm text-code-sm text-tertiary-container mb-1">
+<span>EMPATHY_INDEX</span>
+<span>91%</span>
+</div>
+<div class="w-full h-2 bg-surface-container border border-tertiary-container/30">
+<div class="h-full bg-tertiary-container shadow-[0_0_10px_#7fecff]" style="width: 91%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Bottom SYS_LOG Ticker -->
+<footer class="mt-auto bg-black border-t border-primary-fixed/50 z-20 h-10 flex items-center shadow-[0_-5px_15px_rgba(0,255,65,0.1)]">
+<div class="px-4 font-label-md text-label-md text-primary-fixed bg-black border-r border-primary-fixed/50 h-full flex items-center z-30 shrink-0">
+                [ SYS_LOG ]
+            </div>
+<div class="ticker-wrap flex-1 h-full flex items-center overflow-hidden">
+<div class="ticker font-code-sm text-code-sm text-primary-fixed-dim">
+                    &gt; 10:42:01.004 [INFO] Node connection established. 
+                    &gt; 10:42:01.056 [WARN] Packet loss detected in sector 7. 
+                    &gt; 10:42:01.102 [INFO] Agent Alpha deployed heuristic model v3.4. 
+                    &gt; 10:42:01.198 [SYNC] Handshake complete. 
+                    &gt; 10:42:01.305 [DATA] Incoming stream from vector node 9... 
+                    &gt; 10:42:01.444 [ALERT] Sentiment deviation exceeds threshold. 
+                    &gt; 10:42:01.501 [INFO] Recalibrating matrix parameters...
+                </div>
+</div>
+</footer>
+</main>
+<!-- Matrix Rain Script -->
+<script>
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        document.getElementById('matrix-canvas-container').appendChild(canvas);
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+
+        const rainDrops = [];
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = 1;
+        }
+
+        const draw = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00e639';
+            ctx.font = fontSize + 'px "JetBrains Mono", monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        };
+
+        setInterval(draw, 30);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Reset raindrops array size based on new width
+            const newColumns = canvas.width / fontSize;
+            rainDrops.length = 0;
+            for (let x = 0; x < newColumns; x++) {
+                rainDrops[x] = 1;
+            }
+        });
+    </script>
+</body></html>
