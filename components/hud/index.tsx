@@ -3,7 +3,57 @@
 // Neural OS — reusable HUD primitives. Thin wrappers over the design-system classes in
 // app/globals.css. Source of truth: stitch_agent_jury_live/neural_interface/DESIGN.md.
 
-import { ButtonHTMLAttributes, CSSProperties, InputHTMLAttributes, ReactNode } from "react";
+import { ButtonHTMLAttributes, CSSProperties, InputHTMLAttributes, ReactNode, useEffect, useRef } from "react";
+
+// --- Animated Matrix rain (real falling glyphs on a canvas, per the Stitch reference) ---
+const RAIN_CHARS =
+  ("アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプ" +
+    "エェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロゴゾドボポヴッン" +
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789").split("");
+
+export function MatrixRain({ opacity = 0.3, fontSize = 16 }: { opacity?: number; fontSize?: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    let raf = 0, cols = 0, w = 0, h = 0, drops: number[] = [];
+    const resize = () => {
+      w = canvas.width = canvas.offsetWidth;
+      h = canvas.height = canvas.offsetHeight;
+      cols = Math.max(1, Math.floor(w / fontSize));
+      // Spread drops across the full height so the rain fills the viewport immediately.
+      drops = Array.from({ length: cols }, () => Math.random() * (h / fontSize));
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+    let last = 0;
+    const interval = 1000 / 24;
+    const draw = (t: number) => {
+      raf = requestAnimationFrame(draw);
+      if (t - last < interval) return;
+      last = t;
+      ctx.fillStyle = "rgba(6, 8, 7, 0.09)"; // trail-fade against --bg
+      ctx.fillRect(0, 0, w, h);
+      ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
+      for (let i = 0; i < cols; i++) {
+        const ch = RAIN_CHARS[(Math.random() * RAIN_CHARS.length) | 0];
+        const y = drops[i] * fontSize;
+        ctx.fillStyle = drops[i] > 0 && Math.random() > 0.92 ? "#c8ffd6" : "#00ff41"; // occasional bright leader
+        ctx.fillText(ch, i * fontSize, y);
+        if (y > h && Math.random() > 0.975) drops[i] = 0;
+        drops[i] += 1;
+      }
+    };
+    if (reduce) { ctx.fillStyle = "rgba(6,8,7,1)"; ctx.fillRect(0, 0, w, h); }
+    else raf = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+  }, [fontSize]);
+  return <canvas ref={ref} aria-hidden style={{ position: "fixed", inset: 0, zIndex: 0, opacity, pointerEvents: "none" }} />;
+}
 
 type Tone = "green" | "violet" | "blue" | "red";
 
