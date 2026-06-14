@@ -108,8 +108,9 @@ async def _context_dev(claim: str, subclaims: list[dict], k: int) -> list[dict]:
     # One focused query (claim + top sub-claim) — "evidence grounding only" keeps credit use low.
     sc = subclaims[0]["text"] if subclaims else ""
     query = f"{claim} {sc}".strip()[:500]
-    body = {"query": query,
-            "markdownOptions": {"enabled": True, "useMainContentOnly": True, "includeImages": False}}
+    # Use the result `description` as the snippet; do NOT scrape each result to markdown — that
+    # fetches every page and easily blows the timeout (and costs more credits) for no gain here.
+    body = {"query": query, "markdownOptions": {"enabled": False}}
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     timeout = aiohttp.ClientTimeout(total=25)
     async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
