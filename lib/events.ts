@@ -46,6 +46,8 @@ export interface Juror {
   voice: string;
   stance_prior: number;
   opening_question: string;
+  why?: string;                 // why this persona is on the panel for THIS claim
+  disposition_label?: string;   // human-readable disposition (e.g. "tolerant · principled · …")
 }
 
 export interface Subclaim {

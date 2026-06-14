@@ -55,6 +55,26 @@ _GENERIC_LENS = {
     "historian": ("Historian / Precedent", "Wren", "what comparable cases show"),
 }
 
+# Why each coverage axis is on the panel — shown at onboarding so users trust the spread.
+_WHY = {
+    "proponent": "Here to build the strongest honest case FOR the claim.",
+    "opponent": "Here to press the hardest case AGAINST the claim.",
+    "affected": "Speaks for the people who actually bear the consequences.",
+    "methodologist": "Pressure-tests the quality of the evidence itself.",
+    "ethicist": "Weighs who benefits and who pays the cost.",
+    "historian": "Checks the claim against comparable past cases.",
+}
+
+# Decode the fixed disposition code (e.g. "tol/prin/long/ref") into a readable badge for the UI.
+_DISP = {
+    "tol": "tolerant", "av": "adversarial", "prin": "principled", "emp": "empirical",
+    "long": "long-horizon", "near": "near-term", "ref": "referential", "sq": "skeptical",
+}
+
+
+def _disposition_label(code: str) -> str:
+    return " · ".join(_DISP.get(p, p) for p in code.split("/"))
+
 
 def deployment_for(settings: Settings, slot: SlotSpec) -> str:
     return getattr(settings, slot.deployment_key)
@@ -70,11 +90,12 @@ def _casting_prompt(claim: str, subclaims: list[dict], slots: list[SlotSpec]) ->
         f"SLOTS (fixed model+disposition+axis — you may NOT change these):\n{slot_lines}\n\n"
         "For EACH slot assign a topic-relevant persona that fits its disposition and axis:\n"
         "  lens (a specific domain expertise for THIS claim), name (one word), voice (one short line),\n"
-        "  stance_prior (a number in [-1,1] for balance only), opening_question (one cross-exam line).\n"
+        "  stance_prior (a number in [-1,1] for balance only), opening_question (one cross-exam line),\n"
+        "  why (one short line on why THIS persona belongs on the panel for THIS claim).\n"
         "Keep proponents positive-leaning and opponents negative-leaning so the panel is balanced.\n"
         "No two lenses may be near-duplicates. Return ONLY JSON:\n"
         '{"assignments":[{"slot":"S1","axis":"proponent","lens":"...","name":"...",'
-        '"voice":"...","stance_prior":0.3,"opening_question":"..."}]}'
+        '"voice":"...","stance_prior":0.3,"opening_question":"...","why":"..."}]}'
     )
 
 
@@ -110,16 +131,17 @@ async def cast_panel(
             stance = 0.3 if s.axis == "proponent" else -0.3 if s.axis == "opponent" else 0.0
             jurors.append({
                 "slot": s.id, "model": model_label(settings, deployment_for(settings, s)),
-                "disposition": s.disposition, "axis": s.axis, "lens": lens, "name": name,
-                "voice": voice, "stance_prior": stance,
-                "opening_question": "What does the evidence actually show?",
+                "disposition": s.disposition, "disposition_label": _disposition_label(s.disposition),
+                "axis": s.axis, "lens": lens, "name": name, "voice": voice, "stance_prior": stance,
+                "opening_question": "What does the evidence actually show?", "why": _WHY[s.axis],
             })
         else:
             jurors.append({
                 "slot": s.id, "model": model_label(settings, deployment_for(settings, s)),
-                "disposition": s.disposition, "axis": a.axis or s.axis, "lens": a.lens,
-                "name": a.name, "voice": a.voice, "stance_prior": a.stance_prior,
-                "opening_question": a.opening_question,
+                "disposition": s.disposition, "disposition_label": _disposition_label(s.disposition),
+                "axis": a.axis or s.axis, "lens": a.lens, "name": a.name, "voice": a.voice,
+                "stance_prior": a.stance_prior, "opening_question": a.opening_question,
+                "why": a.why or _WHY[s.axis],
             })
 
     balance = _balance_audit(jurors, fell_back)

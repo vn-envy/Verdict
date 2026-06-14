@@ -45,6 +45,7 @@ class CastAssignment(BaseModel):
     voice: str = ""
     stance_prior: float = 0.0
     opening_question: str = ""
+    why: str = ""  # one line: why this persona is on the panel for THIS claim
 
     @field_validator("stance_prior")
     @classmethod

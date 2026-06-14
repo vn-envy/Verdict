@@ -33,7 +33,15 @@ export function NeuralRoom({ id, claim, prior }: { id: string; claim?: string; p
   const s = useEventStream(source);
   const st = s.state;
   const [showVerdict, setShowVerdict] = useState(true);
+  const [empanelOpen, setEmpanelOpen] = useState(true);
   const feedRef = useRef<HTMLDivElement>(null);
+
+  // The empaneling beat introduces the jurors, then yields to the room once the floor opens.
+  useEffect(() => {
+    if (st.claims.length > 0 || st.phase === "verdict") setEmpanelOpen(false);
+  }, [st.claims.length, st.phase]);
+  const showEmpanel =
+    empanelOpen && st.jurors.length > 0 && st.claims.length === 0 && st.phase !== "verdict";
 
   const con = st.consensus;
   const speaker = st.speaker ? st.jurorsBySlot[st.speaker] : undefined;
@@ -164,6 +172,45 @@ export function NeuralRoom({ id, claim, prior }: { id: string; claim?: string; p
         </div>
       </div>
 
+      {/* empaneling reveal beat — introduce the council (name · role · why · opener) before debate */}
+      {showEmpanel && (
+        <div className="synth-bg" onClick={() => setEmpanelOpen(false)}>
+          <div className="empanel" onClick={(e) => e.stopPropagation()}>
+            <div className="label" style={{ textAlign: "center", color: "var(--green)" }}>EMPANELING_THE_COUNCIL</div>
+            <div style={{ textAlign: "center", margin: "8px 0 4px" }}>
+              <span className="h-lg"><GlitchText>WHY THESE TWELVE</GlitchText></span>
+            </div>
+            <p className="code-sm muted" style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 18px" }}>
+              Every case convenes a fresh, deliberately diverse panel — different model families and
+              opposing lenses — so no single bias decides the verdict. Here's who's in the room, and why.
+            </p>
+            <div className="empanel-grid">
+              {st.jurors.map((j, i) => {
+                const col = axisColor(j.axis);
+                return (
+                  <motion.div key={j.slot} className="ecard"
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: Math.min(i * 0.06, 0.7) }}
+                    style={{ ["--c" as keyof CSSProperties]: col } as CSSProperties}>
+                    <div className="ecard-head">
+                      <span className="ecard-name">{j.name}</span>
+                      <span className="ecard-model">{j.model}</span>
+                    </div>
+                    <div className="ecard-role">{j.axis}{j.lens ? ` · ${j.lens}` : ""}</div>
+                    {j.why && <div className="ecard-why">{j.why}</div>}
+                    {j.opening_question && <div className="ecard-q">“{j.opening_question}”</div>}
+                    {j.disposition_label && <div className="ecard-disp">{j.disposition_label}</div>}
+                  </motion.div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 18 }}>
+              <Button primary onClick={() => setEmpanelOpen(false)}>BEGIN_DELIBERATION →</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* verdict overlay */}
       {st.phase === "verdict" && st.verdict && showVerdict && (
         <div className="synth-bg" onClick={() => setShowVerdict(false)}>
@@ -222,6 +269,16 @@ export function NeuralRoom({ id, claim, prior }: { id: string; claim?: string; p
         .scrub { width: 100%; accent-color: var(--green); }
         .synth-bg { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
         .synth { width: min(820px, 96vw); max-height: 92vh; overflow: auto; background: var(--surface); border: 1px solid var(--green); box-shadow: 0 0 40px rgba(0,255,65,0.18); padding: 30px; }
+        .empanel { width: min(980px, 96vw); max-height: 92vh; overflow: auto; background: var(--surface); border: 1px solid var(--green); box-shadow: 0 0 40px rgba(0,255,65,0.16); padding: 28px; }
+        .empanel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .ecard { border-left: 2px solid var(--c, var(--green)); background: rgba(255,255,255,0.015); padding: 12px 14px; }
+        .ecard-head { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
+        .ecard-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--c, var(--green)); }
+        .ecard-model { font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-variant); border: 1px solid var(--line-2); padding: 1px 6px; white-space: nowrap; }
+        .ecard-role { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+        .ecard-why { font-size: 12.5px; color: var(--ink); margin-top: 8px; line-height: 1.4; }
+        .ecard-q { font-size: 12px; color: var(--ink-variant); font-style: italic; margin-top: 8px; }
+        .ecard-disp { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 8px; }
         @media (max-width: 1080px) { .room-grid { grid-template-columns: 1fr; } .chatfeed { height: 56vh; } }
         @media (max-width: 640px) { .room-top { flex-wrap: wrap; gap: 10px; padding: 14px 16px; } .room-tabs { display: none; } .room-grid { padding: 16px; } }
       `}</style>
