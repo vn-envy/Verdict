@@ -13,6 +13,10 @@ param location string = 'eastus2'
 @description('Email for the monthly cost-budget alert. Empty (default) leaves the budget off so deploys never fail on missing Cost Management RBAC; set BUDGET_ALERT_EMAIL to enable.')
 param budgetAlertEmail string = ''
 
+@secure()
+@description('context.dev API key for live web evidence. Empty (default) ⇒ Wikipedia fallback; set CONTEXT_DEV_API_KEY to enable.')
+param contextDevApiKey string = ''
+
 @description('Object ID of the developer/principal who runs azd, granted data-plane roles for local-first dev (az ad signed-in-user object-id).')
 param principalId string = ''
 
@@ -55,6 +59,7 @@ module resources 'resources.bicep' = {
     principalType: principalType
     openAiDeployments: openAiDeployments
     budgetAlertEmail: budgetAlertEmail
+    contextDevApiKey: contextDevApiKey
   }
 }
 

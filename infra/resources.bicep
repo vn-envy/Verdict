@@ -16,6 +16,9 @@ param monthlyBudgetUsd int = 50
 param budgetAlertEmail string = ''
 @description('Budget start — first of the current month. Leave as default.')
 param budgetStartDate string = utcNow('yyyy-MM-01')
+@secure()
+@description('context.dev API key for live web evidence (EVIDENCE_PROVIDER=context). Empty = Wikipedia fallback.')
+param contextDevApiKey string = ''
 
 // Short, unique-ish suffix for globally-scoped names.
 var suffix = toLower(uniqueString(subscription().id, resourceGroup().id, environmentName))
@@ -268,13 +271,14 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
       activeRevisionsMode: 'Single'
       ingress: { external: true, targetPort: 8000, transport: 'auto' }
       registries: [ { server: acr.properties.loginServer, identity: mi.id } ]
+      secrets: empty(contextDevApiKey) ? [] : [ { name: 'context-dev-api-key', value: contextDevApiKey } ]
     }
     template: {
       containers: [ {
         name: 'orchestrator'
         image: placeholderImage
         resources: { cpu: json('1.0'), memory: '2Gi' }
-        env: [
+        env: concat([
           { name: 'AZURE_CLIENT_ID', value: mi.properties.clientId }   // pin DefaultAzureCredential to this MI
           { name: 'AZURE_OPENAI_ENDPOINT', value: aiServices.properties.endpoint }
           { name: 'AZURE_OPENAI_API_VERSION', value: '2024-10-21' }
@@ -290,7 +294,10 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'CATALOG_MISTRAL_DEPLOYMENT', value: 'Mistral-Large-3' }
           { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
           { name: 'ALLOWED_ORIGINS', value: 'https://${webApp.properties.configuration.ingress.fqdn}' }
-        ]
+          { name: 'EVIDENCE_PROVIDER', value: 'context' }
+        ], empty(contextDevApiKey) ? [] : [
+          { name: 'CONTEXT_DEV_API_KEY', secretRef: 'context-dev-api-key' }
+        ])
         probes: [
           { type: 'Liveness', httpGet: { path: '/healthz', port: 8000 }, initialDelaySeconds: 8, periodSeconds: 30 }
           { type: 'Readiness', httpGet: { path: '/healthz', port: 8000 }, initialDelaySeconds: 5, periodSeconds: 10 }
