@@ -70,7 +70,7 @@ class Settings:
             phi4_deployment=os.getenv("CATALOG_PHI4_DEPLOYMENT", "Phi-4"),
             mistral_deployment=os.getenv("CATALOG_MISTRAL_DEPLOYMENT", "Mistral-Large-3"),
             panel_size=int(os.getenv("PANEL_SIZE", "12")),
-            max_rounds=int(os.getenv("MAX_ROUNDS", "3")),
+            max_rounds=int(os.getenv("MAX_ROUNDS", "5")),
             # Optional: require X-API-Key on /api/cases when set (empty = open, as today).
             api_key=os.getenv("API_KEY", ""),
             # Per-IP case starts/min, and a hard ceiling on concurrent deliberations (each

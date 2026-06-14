@@ -11,6 +11,7 @@ import { Envelope, Tape } from "./events";
 import { CaseState, initialState, reduce } from "./reducer";
 
 const BASE_DELAY_MS = 850; // inter-seq delay at 1x for replay; pacing only — never alters payloads
+const LIVE_DELAY_MS = 420; // live: steady cadence so messages stream readably, not in bursts
 
 export type StreamSource =
   | { mode: "replay"; url: string }
@@ -149,17 +150,16 @@ export function useEventStream(source: StreamSource): StreamControls {
     [events, cursor]
   );
 
-  // Live: follow the tail as events arrive (until the user pauses/scrubs).
+  // Timer-paced advance for BOTH modes: reveal one event per tick so the room reads like a real
+  // conversation instead of dumping in bursts. Live uses a steady cadence; replay scales with
+  // `speed`. The cursor still chases `events.length`, so live catches up and never falls behind
+  // permanently — and `case.closed`/the verdict simply reveal when the cursor reaches them.
   useEffect(() => {
-    if (live && following.current) setCursor(events.length);
-  }, [events, live]);
-
-  // Replay: timer-paced advance. Disabled in live mode (events arrive in real time).
-  useEffect(() => {
-    if (live || !playing || events.length === 0 || cursor >= events.length) return;
+    if (!playing || events.length === 0 || cursor >= events.length) return;
+    const delay = (live ? LIVE_DELAY_MS : BASE_DELAY_MS) / speed;
     timer.current = setTimeout(
       () => setCursor((c) => Math.min(c + 1, events.length)),
-      BASE_DELAY_MS / speed
+      delay
     );
     return () => {
       if (timer.current) clearTimeout(timer.current);
@@ -168,11 +168,8 @@ export function useEventStream(source: StreamSource): StreamControls {
 
   const play = useCallback(() => {
     setPlaying(true);
-    if (live) {
-      following.current = true;
-      setCursor(events.length); // jump to the live tail
-    }
-  }, [live, events.length]);
+    following.current = true; // resume paced playback (scrub to the end to skip ahead)
+  }, []);
   const pause = useCallback(() => {
     setPlaying(false);
     following.current = false;

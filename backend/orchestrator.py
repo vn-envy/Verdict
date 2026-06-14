@@ -24,8 +24,8 @@ from events import EventBus
 from models import ModelRegistry, model_label
 from schemas import BiasOut, DevilsAdvocateOut, FactcheckOut, JurorBallot
 
-CONVERGENCE_STOP = 0.8
-SPEAKERS_PER_ROUND = 4
+CONVERGENCE_STOP = 0.9
+SPEAKERS_PER_ROUND = 6
 
 
 def _act(round_no: int, max_rounds: int) -> int:
@@ -116,6 +116,7 @@ class Foreman:
         last_turn: dict[str, object] = {}
         claim_seq = 0
         bias_counts: dict[str, int] = {}
+        stall_streak = 0
         for rnd in range(1, mr + 1):
             act = _act(rnd, mr)
             agenda = await self._safe(
@@ -191,7 +192,10 @@ class Foreman:
                                round=rnd, act=act)
 
             converged = result.convergence >= CONVERGENCE_STOP
-            stalled = (not result.shifts) and rnd > 1 and not converged
+            # End only on real convergence or TWO consecutive quiet rounds — a single quiet round
+            # shouldn't cut the conversation short (we want the room to deliberate longer).
+            stall_streak = stall_streak + 1 if (not result.shifts and rnd > 1) else 0
+            stalled = stall_streak >= 2 and not converged
             await bus.emit("round.end", {"round": rnd, "converged": converged, "stalled": stalled},
                            round=rnd, act=act)
             if converged or stalled:
