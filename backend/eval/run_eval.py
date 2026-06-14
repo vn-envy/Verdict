@@ -34,15 +34,14 @@ def _weighted_sign(per_juror: list[dict]) -> float:
     return sum(p["vote"] * p.get("confidence", 0) for p in per_juror) / wsum
 
 
-def result_from_events(key: str, truth_sign: int, truth_label: str, events: list[dict],
-                       baseline=None) -> CaseResult:
+def result_from_events(c: dict, events: list[dict], baseline=None) -> CaseResult:
     verdict = next((e["data"] for e in events if e["event"] == "verdict.final"), {})
     reveal = next((e["data"] for e in events if e["event"] == "round.blind.reveal"), {})
     consensus = verdict.get("consensus", {})
     return CaseResult(
-        key=key,
-        truth_sign=truth_sign,
-        truth_label=truth_label,
+        key=c["key"],
+        truth_sign=c["truth_sign"],
+        truth_label=c["truth_label"],
         blind_score=round(_weighted_sign(reveal.get("per_juror", [])), 4),
         final_score=consensus.get("score", 0.0),
         final_label=consensus.get("label", "contested"),
@@ -52,7 +51,13 @@ def result_from_events(key: str, truth_sign: int, truth_label: str, events: list
         bias_flags=sum(b.get("count", 0) for b in verdict.get("bias_flags", [])),
         baseline_score=(baseline or {}).get("score"),
         baseline_confidence=(baseline or {}).get("confidence"),
+        category=c.get("category", "uncategorized"),
+        difficulty=c.get("difficulty", "medium"),
     )
+
+
+def _has_tape(key: str) -> bool:
+    return os.path.exists(os.path.join(_ROOT, "public", f"case_{key}_tape.json"))
 
 
 def _dry_events(key: str) -> list[dict]:
@@ -82,8 +87,13 @@ async def run(args) -> int:
 
     if args.dry:
         for k in keys:
-            c = ds[k]
-            results.append(result_from_events(k, c["truth_sign"], c["truth_label"], _dry_events(k)))
+            if not _has_tape(k):
+                print(f"– skip {k}: no canned tape (self-contained case; run live to score)")
+                continue
+            results.append(result_from_events(ds[k], _dry_events(k)))
+        if not results:
+            print("No tape-backed cases selected; --dry only scores A/B/C. Use a live run for the rest.")
+            return 0
     else:
         from config import Settings
         from cases import load_case
@@ -98,14 +108,16 @@ async def run(args) -> int:
             settings = dataclasses.replace(settings, max_rounds=args.rounds)
         reg = ModelRegistry(settings)
         try:
+            from cases import custom_case
             for k in keys:
                 c = ds[k]
-                case = load_case(k)
+                # Self-contained cases carry their own claim; A/B/C load from cases.py.
+                case = custom_case(c["claim"]) if c.get("claim") else load_case(k)
                 print(f"▶ evaluating {k}: {case['claim']}")
                 bus = EventBus(case["case_id"])
                 await run_case(k, settings, bus=bus, registry=reg, case=case)
                 baseline = await _baseline_vote(reg, settings, case["claim"])
-                results.append(result_from_events(k, c["truth_sign"], c["truth_label"], bus.log, baseline))
+                results.append(result_from_events(c, bus.log, baseline))
         finally:
             await reg.aclose()
 
