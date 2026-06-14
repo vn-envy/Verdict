@@ -20,6 +20,7 @@ from cases import custom_case, load_case
 from config import Settings
 from cosmos_store import CosmosTapeStore
 from events import EventBus
+from guards import ConcurrencyCap, SlidingWindowLimiter, client_ip
 from models import ModelRegistry
 from orchestrator import Foreman
 
@@ -36,16 +37,20 @@ app.add_middleware(
 _settings: Settings
 _registry: ModelRegistry
 _store: CosmosTapeStore
+_limiter: SlidingWindowLimiter
+_cap: ConcurrencyCap
 _buses: dict[str, EventBus] = {}
 _tasks: dict[str, asyncio.Task] = {}
 
 
 @app.on_event("startup")
 async def _startup() -> None:
-    global _settings, _registry, _store
+    global _settings, _registry, _store, _limiter, _cap
     _settings = Settings.load()
     _registry = ModelRegistry(_settings)
     _store = CosmosTapeStore(_settings)
+    _limiter = SlidingWindowLimiter(_settings.rate_limit_per_min, window_seconds=60.0)
+    _cap = ConcurrencyCap(_settings.max_active_deliberations)
 
 
 @app.on_event("shutdown")
@@ -56,6 +61,22 @@ async def _shutdown() -> None:
 
 @app.post("/api/cases")
 async def start_case(request: Request) -> JSONResponse:
+    # --- Guardrails: protect the wallet on a public endpoint (see guards.py) ----------
+    if _settings.api_key and request.headers.get("x-api-key") != _settings.api_key:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    if not _limiter.allow(client_ip(request)):
+        return JSONResponse(
+            {"error": "rate_limited",
+             "detail": f"max {_settings.rate_limit_per_min} deliberations/min per client"},
+            status_code=429,
+        )
+    if not _cap.try_acquire():
+        return JSONResponse(
+            {"error": "at_capacity",
+             "detail": f"max {_settings.max_active_deliberations} concurrent deliberations; retry shortly"},
+            status_code=429,
+        )
+
     body = await request.json() if await request.body() else {}
     if body.get("claim"):
         case = custom_case(body["claim"], user_prior=float(body.get("user_prior", 0.0)),
@@ -71,6 +92,8 @@ async def start_case(request: Request) -> JSONResponse:
             await Foreman(_settings, _registry, bus).run(case)
         except Exception as exc:  # noqa: BLE001 — surface, don't crash the server
             print(f"[deliberation {case['case_id']}] failed: {type(exc).__name__}: {exc}")
+        finally:
+            _cap.release()  # free the concurrency slot whether the run succeeded or failed
 
     _tasks[case["case_id"]] = asyncio.create_task(_run())
     return JSONResponse({"case_id": case["case_id"], "title": case["title"]})

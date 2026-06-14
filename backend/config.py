@@ -47,6 +47,11 @@ class Settings:
     # Deliberation knobs.
     panel_size: int
     max_rounds: int
+    # API guardrails (cost/abuse protection on the public endpoint) + per-call LLM timeout.
+    api_key: str
+    rate_limit_per_min: int
+    max_active_deliberations: int
+    llm_timeout_seconds: float
 
     @staticmethod
     def load() -> "Settings":
@@ -68,6 +73,13 @@ class Settings:
             mistral_deployment=os.getenv("CATALOG_MISTRAL_DEPLOYMENT", "Mistral-Large-3"),
             panel_size=int(os.getenv("PANEL_SIZE", "12")),
             max_rounds=int(os.getenv("MAX_ROUNDS", "3")),
+            # Optional: require X-API-Key on /api/cases when set (empty = open, as today).
+            api_key=os.getenv("API_KEY", ""),
+            # Per-IP case starts/min, and a hard ceiling on concurrent deliberations (each
+            # deliberation fans out to ~100 LLM calls, so this is the real cost guard).
+            rate_limit_per_min=int(os.getenv("RATE_LIMIT_PER_MIN", "5")),
+            max_active_deliberations=int(os.getenv("MAX_ACTIVE_DELIBERATIONS", "3")),
+            llm_timeout_seconds=float(os.getenv("LLM_TIMEOUT_SECONDS", "90")),
         )
 
     @property
