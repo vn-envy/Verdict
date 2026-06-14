@@ -112,12 +112,19 @@ async def run(args) -> int:
             for k in keys:
                 c = ds[k]
                 # Self-contained cases carry their own claim; A/B/C load from cases.py.
-                case = custom_case(c["claim"]) if c.get("claim") else load_case(k)
-                print(f"▶ evaluating {k}: {case['claim']}")
-                bus = EventBus(case["case_id"])
-                await run_case(k, settings, bus=bus, registry=reg, case=case)
-                baseline = await _baseline_vote(reg, settings, case["claim"])
-                results.append(result_from_events(c, bus.log, baseline))
+                try:
+                    case = custom_case(c["claim"]) if c.get("claim") else load_case(k)
+                    print(f"▶ evaluating {k}: {case['claim']}", flush=True)
+                    bus = EventBus(case["case_id"])
+                    await run_case(k, settings, bus=bus, registry=reg, case=case)
+                    try:
+                        baseline = await _baseline_vote(reg, settings, case["claim"])
+                    except Exception as exc:  # noqa: BLE001 — baseline is optional; keep the case
+                        print(f"  baseline failed for {k}: {type(exc).__name__}", flush=True)
+                        baseline = None
+                    results.append(result_from_events(c, bus.log, baseline))
+                except Exception as exc:  # noqa: BLE001 — one bad case shouldn't sink a long run
+                    print(f"  ✗ skipped {k}: {type(exc).__name__}: {exc}", flush=True)
         finally:
             await reg.aclose()
 
