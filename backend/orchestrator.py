@@ -20,7 +20,7 @@ from consensus import (
 )
 from events import EventBus
 from models import ModelRegistry, model_label
-from schemas import JurorBallot
+from schemas import BiasOut, DevilsAdvocateOut, FactcheckOut, JurorBallot
 
 CONVERGENCE_STOP = 0.8
 SPEAKERS_PER_ROUND = 4
@@ -62,7 +62,8 @@ class Foreman:
                                       "user_prior": case["user_prior"]}, round=0, act=1)
         await agents.content_safety_screen(s, claim)  # real Prompt-Shields-style inbound screen
 
-        subclaims = await agents.decompose(reg, s, claim)
+        subclaims = await self._safe(agents.decompose(reg, s, claim),
+                                     [{"id": "sc1", "text": claim, "status": "open"}], "decompose")
         await bus.emit("subclaims.ready", {"subclaims": subclaims}, round=0, act=1)
         sc_ids = [sc["id"] for sc in subclaims]
 
@@ -112,7 +113,10 @@ class Foreman:
         bias_counts: dict[str, int] = {}
         for rnd in range(1, mr + 1):
             act = _act(rnd, mr)
-            agenda = await agents.foreman_agenda(reg, s, rnd, subclaims, result.label)
+            agenda = await self._safe(
+                agents.foreman_agenda(reg, s, rnd, subclaims, result.label),
+                f"Round {rnd}: weigh the evidence on each sub-claim and update your vote.",
+                "foreman_agenda")
             await bus.emit("round.start", {"round": rnd, "agenda": agenda}, round=rnd, act=act)
 
             # Every juror reconsiders (concurrently); a rotating few take the floor.
@@ -135,13 +139,15 @@ class Foreman:
                     "subclaim_id": t.subclaim_id, "spans": [],
                 }, round=rnd, act=act)
                 # Bias sentinel + verifier (verifier may lag; we emit right after for simplicity).
-                bias = await agents.bias_scan(reg, s, t.text)
+                bias = await self._safe(agents.bias_scan(reg, s, t.text), BiasOut(), "bias_scan")
                 for fl in bias.flags:
                     bias_counts[fl.type] = bias_counts.get(fl.type, 0) + 1
                     await bus.emit("bias.flag", {"juror_id": j["slot"], "type": fl.type,
                                                  "severity": fl.severity, "note": fl.note},
                                    round=rnd, act=act)
-                fc = await agents.verify_claim(reg, s, t.text, evidence)
+                fc = await self._safe(agents.verify_claim(reg, s, t.text, evidence),
+                                      FactcheckOut(status="pending", note="(verifier unavailable)"),
+                                      "verify_claim")
                 await bus.emit("factcheck.result", {
                     "claim_ref": cref, "status": fc.status,
                     "citations": [{"evidence_id": e, "credibility": _cred(evidence, e)} for e in fc.citations],
@@ -149,7 +155,11 @@ class Foreman:
                 }, round=rnd, act=act)
 
             # Mandated dissent.
-            attack = await agents.devils_advocate(reg, s, claim, result.label, evidence)
+            attack = await self._safe(
+                agents.devils_advocate(reg, s, claim, result.label, evidence),
+                DevilsAdvocateOut(target_consensus=result.label,
+                                  argument="(no challenge raised this round)"),
+                "devils_advocate")
             await bus.emit("devils_advocate.attack", {
                 "name": da["name"], "target_consensus": attack.target_consensus,
                 "argument": attack.argument,
@@ -187,6 +197,17 @@ class Foreman:
                                  engine, bias_counts)
         await bus.emit("case.closed", {"tape_uri": f"cosmos://{self.s.cosmos_database}/{bus.case_id}/tape"},
                        round=result_round(result, mr), act=4)
+
+    # -- resilience helper -----------------------------------------------
+    async def _safe(self, coro, fallback, what):
+        """Run an agent call; on any error log it and return a safe fallback. The jurors already
+        degrade this way (abstain); this extends the same isolation to the Foreman / Verifier /
+        Bias Sentinel / Devil's Advocate so one agent failure can't kill the whole run."""
+        try:
+            return await coro
+        except Exception as exc:  # noqa: BLE001 — intentional: isolate a single agent failure
+            print(f"[{self.bus.case_id}] {what} failed: {type(exc).__name__}: {exc}")
+            return fallback
 
     # -- concurrency helpers ---------------------------------------------
     async def _gather_blind(self, jurors, claim, subclaims, evidence) -> dict[str, JurorBallot]:
@@ -238,9 +259,12 @@ class Foreman:
         votes = [_ballot_to_vote(j["slot"], ballots[j["slot"]], sc_ids) for j in jurors]
         final_sign = 1 if result.score > 0 else -1 if result.score < 0 else 0
         ece = expected_calibration_error(votes, final_sign)
-        takeaway = await agents.foreman_takeaway(
-            self.reg, self.s, claim, result.label,
-            [{"subclaim_id": p.subclaim_id, "score": p.score} for p in result.per_subclaim])
+        takeaway = await self._safe(
+            agents.foreman_takeaway(
+                self.reg, self.s, claim, result.label,
+                [{"subclaim_id": p.subclaim_id, "score": p.score} for p in result.per_subclaim]),
+            f"The room reached '{result.label}'. See the per-sub-claim breakdown below.",
+            "foreman_takeaway")
 
         sc_text = {sc["id"]: sc["text"] for sc in subclaims}
         per_subclaim = []

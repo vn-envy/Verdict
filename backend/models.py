@@ -126,14 +126,19 @@ class ModelRegistry:
         max_tokens: int = 700,
         temperature: float = 0.4,
     ) -> str:
-        """Return the model's text. `want_json` adds a response_format hint where supported."""
+        """Return the model's text. `want_json` adds a response_format hint where supported.
+
+        Each attempt is bounded by `llm_timeout_seconds` so a hung model endpoint can't stall a
+        whole deliberation — a timeout propagates (it isn't a 429, so it isn't retried) and the
+        calling agent degrades gracefully (orchestrator)."""
+        timeout = self.s.llm_timeout_seconds
         async with self._sem(deployment):
             if deployment in self.openai_deployments:
-                return await self._complete_openai(deployment, system, user, want_json, max_tokens, temperature)
-            return await self._complete_inference(deployment, system, user, max_tokens, temperature)
+                return await self._complete_openai(deployment, system, user, want_json, max_tokens, temperature, timeout)
+            return await self._complete_inference(deployment, system, user, max_tokens, temperature, timeout)
 
     @_retry
-    async def _complete_openai(self, deployment, system, user, want_json, max_tokens, temperature) -> str:
+    async def _complete_openai(self, deployment, system, user, want_json, max_tokens, temperature, timeout) -> str:
         from agent_framework import ChatOptions, Content, Message
 
         client = self._openai(deployment)
@@ -147,20 +152,22 @@ class ModelRegistry:
             opts["response_format"] = {"type": "json_object"}
         if not reasoning:  # temperature et al. are unsupported on o-series reasoning models
             opts["temperature"] = temperature
-        resp = await client.get_response(msgs, options=ChatOptions(**opts))
+        to = timeout if timeout and timeout > 0 else None
+        resp = await asyncio.wait_for(client.get_response(msgs, options=ChatOptions(**opts)), to)
         return resp.text
 
     @_retry
-    async def _complete_inference(self, deployment, system, user, max_tokens, temperature) -> str:
+    async def _complete_inference(self, deployment, system, user, max_tokens, temperature, timeout) -> str:
         from azure.ai.inference.models import SystemMessage, UserMessage
 
         client = self._inference_client()
-        resp = await client.complete(
+        to = timeout if timeout and timeout > 0 else None
+        resp = await asyncio.wait_for(client.complete(
             model=deployment,
             messages=[SystemMessage(content=system), UserMessage(content=user)],
             max_tokens=max_tokens,
             temperature=temperature,
-        )
+        ), to)
         return resp.choices[0].message.content
 
     async def aclose(self) -> None:
