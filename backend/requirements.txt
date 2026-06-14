@@ -23,3 +23,5 @@ tenacity>=8.3
 jsonschema>=4.22
 # Web/RAG grounding (Evidence Gatherer) — async HTTP to the evidence provider (Wikipedia).
 aiohttp>=3.10
+# Observability — ships logs/traces to the provisioned App Insights (auto-instruments logging).
+azure-monitor-opentelemetry>=1.6

@@ -24,6 +24,8 @@ from guards import ConcurrencyCap, SlidingWindowLimiter, client_ip
 from models import ModelRegistry
 from orchestrator import Foreman
 
+import obs
+
 app = FastAPI(title="Verdict — Deliberation Engine")
 # Allowed origins: localhost for dev + the deployed web app (ALLOWED_ORIGINS, comma-separated,
 # set from the web container app's FQDN in infra/resources.bicep).
@@ -47,6 +49,7 @@ _tasks: dict[str, asyncio.Task] = {}
 async def _startup() -> None:
     global _settings, _registry, _store, _limiter, _cap
     _settings = Settings.load()
+    obs.setup_observability(_settings.appinsights_connection_string)
     _registry = ModelRegistry(_settings)
     _store = CosmosTapeStore(_settings)
     _limiter = SlidingWindowLimiter(_settings.rate_limit_per_min, window_seconds=60.0)
@@ -91,7 +94,8 @@ async def start_case(request: Request) -> JSONResponse:
         try:
             await Foreman(_settings, _registry, bus).run(case)
         except Exception as exc:  # noqa: BLE001 — surface, don't crash the server
-            print(f"[deliberation {case['case_id']}] failed: {type(exc).__name__}: {exc}")
+            obs.case_id_var.set(case["case_id"])
+            obs.log_event("deliberation.error", error=type(exc).__name__, detail=str(exc)[:200])
         finally:
             _cap.release()  # free the concurrency slot whether the run succeeded or failed
 

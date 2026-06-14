@@ -7,9 +7,11 @@ emits every event through the EventBus. All scores come from the Consensus Engin
 from __future__ import annotations
 
 import asyncio
+import time
 
 import agents
 import casting
+import obs
 from cases import load_case
 from config import Settings
 from consensus import (
@@ -54,6 +56,9 @@ class Foreman:
     async def run(self, case: dict) -> None:
         s, reg, bus = self.s, self.reg, self.bus
         mr = s.max_rounds
+        obs.case_id_var.set(bus.case_id)  # tag every LLM call/log for this run (App Insights dim)
+        _t0 = time.monotonic()
+        obs.log_event("deliberation.start", panel=s.panel_size, rounds=mr)
         claim, subclaims_text = case["claim"], None
         evidence = case["evidence"]
 
@@ -197,6 +202,9 @@ class Foreman:
                                  engine, bias_counts)
         await bus.emit("case.closed", {"tape_uri": f"cosmos://{self.s.cosmos_database}/{bus.case_id}/tape"},
                        round=result_round(result, mr), act=4)
+        obs.log_event("deliberation.end", label=result.label, score=round(result.score, 3),
+                      convergence=round(result.convergence, 3),
+                      duration_ms=round((time.monotonic() - _t0) * 1000))
 
     # -- resilience helper -----------------------------------------------
     async def _safe(self, coro, fallback, what):
@@ -206,7 +214,7 @@ class Foreman:
         try:
             return await coro
         except Exception as exc:  # noqa: BLE001 — intentional: isolate a single agent failure
-            print(f"[{self.bus.case_id}] {what} failed: {type(exc).__name__}: {exc}")
+            obs.log_event("agent.failed", agent=what, error=type(exc).__name__, detail=str(exc)[:200])
             return fallback
 
     # -- concurrency helpers ---------------------------------------------

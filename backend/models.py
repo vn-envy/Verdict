@@ -19,11 +19,13 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import time
 from typing import Iterable
 
 from azure.identity import DefaultAzureCredential
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
+import obs
 from config import Settings
 
 # API version that supports every deployment we use (o4-mini needs >= 2024-12-01-preview).
@@ -132,10 +134,19 @@ class ModelRegistry:
         whole deliberation — a timeout propagates (it isn't a 429, so it isn't retried) and the
         calling agent degrades gracefully (orchestrator)."""
         timeout = self.s.llm_timeout_seconds
-        async with self._sem(deployment):
-            if deployment in self.openai_deployments:
-                return await self._complete_openai(deployment, system, user, want_json, max_tokens, temperature, timeout)
-            return await self._complete_inference(deployment, system, user, max_tokens, temperature, timeout)
+        start = time.monotonic()
+        ok = True
+        try:
+            async with self._sem(deployment):
+                if deployment in self.openai_deployments:
+                    return await self._complete_openai(deployment, system, user, want_json, max_tokens, temperature, timeout)
+                return await self._complete_inference(deployment, system, user, max_tokens, temperature, timeout)
+        except BaseException:
+            ok = False
+            raise
+        finally:
+            obs.log_event("llm_call", deployment=model_label(self.s, deployment),
+                          latency_ms=round((time.monotonic() - start) * 1000), ok=ok)
 
     @_retry
     async def _complete_openai(self, deployment, system, user, want_json, max_tokens, temperature, timeout) -> str:
