@@ -10,8 +10,8 @@ param environmentName string
 @description('Primary location for all resources.')
 param location string = 'eastus2'
 
-@description('Region for AI Search. Split out because East US 2 is frequently out of Search capacity (InsufficientResourcesAvailable).')
-param searchLocation string = 'eastus'
+@description('Email for the monthly cost-budget alert. Empty (default) leaves the budget off so deploys never fail on missing Cost Management RBAC; set BUDGET_ALERT_EMAIL to enable.')
+param budgetAlertEmail string = ''
 
 @description('Object ID of the developer/principal who runs azd, granted data-plane roles for local-first dev (az ad signed-in-user object-id).')
 param principalId string = ''
@@ -49,12 +49,12 @@ module resources 'resources.bicep' = {
   scope: rg
   params: {
     location: location
-    searchLocation: searchLocation
     environmentName: environmentName
     tags: tags
     principalId: principalId
     principalType: principalType
     openAiDeployments: openAiDeployments
+    budgetAlertEmail: budgetAlertEmail
   }
 }
 
@@ -69,7 +69,6 @@ output AZURE_OPENAI_OSERIES_DEPLOYMENT string = 'o4-mini'
 output AZURE_OPENAI_API_VERSION string = '2024-10-21'
 output AZURE_AI_PROJECT_ENDPOINT string = resources.outputs.aiServicesEndpoint
 output CONTENTSAFETY_ENDPOINT string = resources.outputs.contentSafetyEndpoint
-output SEARCH_ENDPOINT string = resources.outputs.searchEndpoint
 output COSMOS_ENDPOINT string = resources.outputs.cosmosEndpoint
 output COSMOS_DATABASE string = resources.outputs.cosmosDatabase
 output COSMOS_CONTAINER string = resources.outputs.cosmosContainer

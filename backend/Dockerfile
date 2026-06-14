@@ -10,6 +10,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Run as a non-root user (defense-in-depth; ACA doesn't require root).
+RUN useradd -m -u 10001 appuser && chown -R appuser /app
+USER appuser
+
 ENV PORT=8000 PYTHONUNBUFFERED=1
 EXPOSE 8000
 

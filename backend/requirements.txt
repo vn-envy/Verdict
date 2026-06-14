@@ -5,7 +5,6 @@ azure-cosmos>=4.7
 python-dotenv>=1.0
 
 # Used as the orchestrator grows (kept here so the venv is ready)
-azure-search-documents>=11.5
 azure-ai-contentsafety>=1.0
 fastapi>=0.115
 uvicorn[standard]>=0.32

@@ -4,14 +4,18 @@
 // the same roles so the orchestrator runs locally via DefaultAzureCredential.
 
 param location string
-@description('Region for AI Search — split out because East US 2 can be capacity-constrained for new Search services.')
-param searchLocation string = location
 param environmentName string
 param tags object
 param principalId string
 @description('Entra type of principalId ("User" locally, "ServicePrincipal" in CI). Drives roleAssignment principalType.')
 param principalType string = 'User'
 param openAiDeployments array
+@description('Monthly cost budget (USD) for this resource group.')
+param monthlyBudgetUsd int = 50
+@description('Email for budget alerts. Empty (default) disables the budget so deploys never fail on missing Cost Management RBAC.')
+param budgetAlertEmail string = ''
+@description('Budget start — first of the current month. Leave as default.')
+param budgetStartDate string = utcNow('yyyy-MM-01')
 
 // Short, unique-ish suffix for globally-scoped names.
 var suffix = toLower(uniqueString(subscription().id, resourceGroup().id, environmentName))
@@ -20,8 +24,6 @@ var namePrefix = 'taa${take(suffix, 8)}'
 // ---- Built-in role definition IDs (verify with `az role definition list --name <role>`) ----
 var roleOpenAiUser = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd') // Cognitive Services OpenAI User
 var roleCognitiveUser = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908') // Cognitive Services User
-var roleSearchIndexData = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7') // Search Index Data Contributor
-var roleSearchService = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0') // Search Service Contributor
 
 // ---- Identity ----
 resource mi 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -74,21 +76,6 @@ resource contentSafety 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   properties: {
     customSubDomainName: 'cs-${namePrefix}'
     publicNetworkAccess: 'Enabled'
-    disableLocalAuth: true
-  }
-}
-
-// ---- Azure AI Search (shared evidence base / RAG) ----
-resource search 'Microsoft.Search/searchServices@2023-11-01' = {
-  name: 'srch-${namePrefix}'
-  location: searchLocation
-  tags: tags
-  sku: { name: 'basic' }
-  identity: { type: 'SystemAssigned' }
-  properties: {
-    replicaCount: 1
-    partitionCount: 1
-    semanticSearch: 'free'
     disableLocalAuth: true
   }
 }
@@ -178,17 +165,32 @@ resource raContentSafety 'Microsoft.Authorization/roleAssignments@2022-04-01' = 
   properties: { roleDefinitionId: roleCognitiveUser, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
 }]
 
-resource raSearchData 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for s in principalSlots: {
-  name: guid(search.id, s == 'mi' ? mi.id : principalId, roleSearchIndexData)
-  scope: search
-  properties: { roleDefinitionId: roleSearchIndexData, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
-}]
-
-resource raSearchService 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for s in principalSlots: {
-  name: guid(search.id, s == 'mi' ? mi.id : principalId, roleSearchService)
-  scope: search
-  properties: { roleDefinitionId: roleSearchService, principalId: s == 'mi' ? mi.properties.principalId : principalId, principalType: s == 'mi' ? 'ServicePrincipal' : principalType }
-}]
+// ---- Cost guardrail: resource-group budget alert (opt-in via budgetAlertEmail) ----
+resource budget 'Microsoft.Consumption/budgets@2023-11-01' = if (monthlyBudgetUsd > 0 && !empty(budgetAlertEmail)) {
+  name: 'budget-${namePrefix}'
+  properties: {
+    category: 'Cost'
+    amount: monthlyBudgetUsd
+    timeGrain: 'Monthly'
+    timePeriod: { startDate: budgetStartDate }
+    notifications: {
+      actual80: {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 80
+        thresholdType: 'Actual'
+        contactEmails: [ budgetAlertEmail ]
+      }
+      forecast100: {
+        enabled: true
+        operator: 'GreaterThan'
+        threshold: 100
+        thresholdType: 'Forecasted'
+        contactEmails: [ budgetAlertEmail ]
+      }
+    }
+  }
+}
 
 // ============================================================================
 // Container hosting — ACR + Azure Container Apps for the backend (FastAPI) and web (Next.js).
@@ -242,7 +244,14 @@ resource webApp 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [ { server: acr.properties.loginServer, identity: mi.id } ]
     }
     template: {
-      containers: [ { name: 'web', image: placeholderImage } ]
+      containers: [ {
+        name: 'web'
+        image: placeholderImage
+        probes: [
+          { type: 'Liveness', httpGet: { path: '/', port: 3000 }, initialDelaySeconds: 10, periodSeconds: 30 }
+          { type: 'Readiness', httpGet: { path: '/', port: 3000 }, initialDelaySeconds: 5, periodSeconds: 10 }
+        ]
+      } ]
       scale: { minReplicas: 0, maxReplicas: 2 }
     }
   }
@@ -276,12 +285,15 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'COSMOS_DATABASE', value: 'deliberations' }
           { name: 'COSMOS_CONTAINER', value: 'events' }
           { name: 'CONTENTSAFETY_ENDPOINT', value: contentSafety.properties.endpoint }
-          { name: 'SEARCH_ENDPOINT', value: 'https://${search.name}.search.windows.net' }
           { name: 'CATALOG_INFERENCE_ENDPOINT', value: 'https://${aiServices.name}.services.ai.azure.com/' }
           { name: 'CATALOG_PHI4_DEPLOYMENT', value: 'Phi-4' }
           { name: 'CATALOG_MISTRAL_DEPLOYMENT', value: 'Mistral-Large-3' }
           { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
           { name: 'ALLOWED_ORIGINS', value: 'https://${webApp.properties.configuration.ingress.fqdn}' }
+        ]
+        probes: [
+          { type: 'Liveness', httpGet: { path: '/healthz', port: 8000 }, initialDelaySeconds: 8, periodSeconds: 30 }
+          { type: 'Readiness', httpGet: { path: '/healthz', port: 8000 }, initialDelaySeconds: 5, periodSeconds: 10 }
         ]
       } ]
       scale: { minReplicas: 0, maxReplicas: 3 }
@@ -299,7 +311,6 @@ output aiServicesEndpoint string = aiServices.properties.endpoint
 // Azure AI model-inference endpoint (serves the catalog models: Phi-4, Mistral).
 output catalogInferenceEndpoint string = 'https://${aiServices.name}.services.ai.azure.com/'
 output contentSafetyEndpoint string = contentSafety.properties.endpoint
-output searchEndpoint string = 'https://${search.name}.search.windows.net'
 output cosmosEndpoint string = cosmos.properties.documentEndpoint
 output cosmosDatabase string = 'deliberations'
 output cosmosContainer string = 'events'

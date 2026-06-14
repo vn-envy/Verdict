@@ -36,7 +36,6 @@ class Settings:
     cosmos_endpoint: str
     cosmos_database: str
     cosmos_container: str
-    search_endpoint: str
     contentsafety_endpoint: str
     appinsights_connection_string: str
     managed_identity_client_id: str
@@ -64,7 +63,6 @@ class Settings:
             cosmos_endpoint=os.getenv("COSMOS_ENDPOINT", ""),
             cosmos_database=os.getenv("COSMOS_DATABASE", "deliberations"),
             cosmos_container=os.getenv("COSMOS_CONTAINER", "events"),
-            search_endpoint=os.getenv("SEARCH_ENDPOINT", ""),
             contentsafety_endpoint=os.getenv("CONTENTSAFETY_ENDPOINT", ""),
             appinsights_connection_string=os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING", ""),
             managed_identity_client_id=os.getenv("AZURE_CLIENT_ID", ""),
