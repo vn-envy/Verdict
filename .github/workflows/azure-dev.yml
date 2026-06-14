@@ -23,6 +23,8 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+      # context.dev key for live web evidence — mounted as an ACA secret by infra (empty ⇒ Wikipedia fallback).
+      CONTEXT_DEV_API_KEY: ${{ secrets.CONTEXT_DEV_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
