@@ -36,6 +36,16 @@ class SubclaimsOut(BaseModel):
     subclaims: list[SubclaimOut] = Field(default_factory=list)
 
 
+class ClaimTypeOut(BaseModel):
+    """factual = empirically checkable true/false; normative = value/policy judgment."""
+    type: str = "factual"
+
+    @field_validator("type")
+    @classmethod
+    def _t(cls, v):
+        return v if v in {"factual", "normative"} else "factual"
+
+
 # ---- Casting Director ----------------------------------------------------
 class CastAssignment(BaseModel):
     slot: str

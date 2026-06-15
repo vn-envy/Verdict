@@ -12,12 +12,25 @@ from config import Settings
 from models import ModelRegistry, extract_json
 from schemas import (
     BiasOut,
+    ClaimTypeOut,
     DevilsAdvocateOut,
     FactcheckOut,
     JurorBallot,
     JurorTurn,
     SubclaimsOut,
 )
+
+
+def _normative_note(claim_type: str) -> str:
+    """Appended to juror prompts on value-laden claims: 'unproven' is not 'false'."""
+    if claim_type != "normative":
+        return ""
+    return (
+        " NOTE: this is a VALUE/POLICY claim where reasonable, well-informed people genuinely "
+        "disagree. 'Not empirically proven' is NOT the same as 'false'. If both sides have a fair "
+        "case, your honest OVERALL vote is 0 (contested/unsure), not -1. Reserve -1 for a claim "
+        "that is wrong on its own terms — not one that is merely unproven or that you dislike."
+    )
 
 
 def evidence_brief(evidence: list[dict]) -> str:
@@ -46,6 +59,19 @@ def _persona(juror: dict) -> str:
     )
 
 
+# ---- Claim-type classifier (cheap, gates normative handling) -------------
+async def classify_claim(reg: ModelRegistry, s: Settings, claim: str) -> str:
+    raw = await reg.complete(
+        s.gpt4o_mini,
+        "You classify a claim's TYPE. 'factual' = an empirically checkable statement that is true "
+        "or false in principle (even if hard to verify). 'normative' = a value, fairness, policy, "
+        "or 'better/best/should' judgment where well-informed people reasonably disagree.",
+        f'CLAIM: {claim}\n\nReturn ONLY JSON: {{"type":"factual|normative"}}',
+        max_tokens=60,
+    )
+    return ClaimTypeOut.model_validate(extract_json(raw)).type
+
+
 # ---- Decomposer ----------------------------------------------------------
 async def decompose(reg: ModelRegistry, s: Settings, claim: str, max_subclaims: int = 4) -> list[dict]:
     raw = await reg.complete(
@@ -65,9 +91,10 @@ async def decompose(reg: ModelRegistry, s: Settings, claim: str, max_subclaims: 
 # ---- Juror ---------------------------------------------------------------
 async def juror_blind_ballot(
     reg: ModelRegistry, s: Settings, deployment: str, juror: dict, claim: str,
-    subclaims: list[dict], evidence: list[dict],
+    subclaims: list[dict], evidence: list[dict], claim_type: str = "factual",
 ) -> JurorBallot:
-    sys = _persona(juror) + " This is the BLIND round: you have NOT seen any other juror's view."
+    sys = (_persona(juror) + " This is the BLIND round: you have NOT seen any other juror's view."
+           + _normative_note(claim_type))
     user = (
         f"CLAIM: {claim}\n\nSUB-CLAIMS:\n" + "\n".join(f"  {sc['id']}: {sc['text']}" for sc in subclaims)
         + "\n\nEVIDENCE:\n" + evidence_brief(evidence)
@@ -80,9 +107,10 @@ async def juror_blind_ballot(
 
 async def juror_turn(
     reg: ModelRegistry, s: Settings, deployment: str, juror: dict, claim: str,
-    subclaims: list[dict], evidence: list[dict], context: str,
+    subclaims: list[dict], evidence: list[dict], context: str, claim_type: str = "factual",
 ) -> JurorTurn:
-    sys = _persona(juror) + " It is now open debate; weigh the floor and the evidence, then update."
+    sys = (_persona(juror) + " It is now open debate; weigh the floor and the evidence, then update."
+           + _normative_note(claim_type))
     user = (
         f"CLAIM: {claim}\n\nSUB-CLAIMS:\n" + "\n".join(f"  {sc['id']}: {sc['text']}" for sc in subclaims)
         + "\n\nEVIDENCE:\n" + evidence_brief(evidence)
@@ -116,11 +144,19 @@ async def devils_advocate(
 # ---- Verifier ------------------------------------------------------------
 async def verify_claim(
     reg: ModelRegistry, s: Settings, claim_text: str, evidence: list[dict],
+    claim_type: str = "factual",
 ) -> FactcheckOut:
+    extra = (
+        " This deliberation is on a NORMATIVE/value claim. A value or policy judgment cannot be "
+        "empirically 'supported' or 'unsupported' — so if the statement is an opinion/value/policy "
+        "judgment rather than a factual assertion, return status 'pending' (it is contested, not "
+        "false). Only mark 'unsupported' for a factual sub-assertion the evidence actually refutes."
+        if claim_type == "normative" else ""
+    )
     raw = await reg.complete(
         s.gpt4o_mini,
         "You are the Verifier: an LLM-as-judge scoring a juror's claim ONLY against the shared "
-        "evidence base. Do not use outside knowledge.",
+        "evidence base. Do not use outside knowledge." + extra,
         f'CLAIM TO CHECK: "{claim_text}"\n\nEVIDENCE:\n' + evidence_brief(evidence)
         + '\n\nReturn ONLY JSON: {"status":"supported|unsupported|partial|pending",'
         '"citations":["ev1"],"note":"one line"}',

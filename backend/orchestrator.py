@@ -69,7 +69,11 @@ class Foreman:
 
         subclaims = await self._safe(agents.decompose(reg, s, claim),
                                      [{"id": "sc1", "text": claim, "status": "open"}], "decompose")
-        await bus.emit("subclaims.ready", {"subclaims": subclaims}, round=0, act=1)
+        # Classify the claim: normative (value/policy) claims get contested-preserving handling
+        # in the jurors, the Verifier, and the Consensus Engine.
+        claim_type = await self._safe(agents.classify_claim(reg, s, claim), "factual", "classify_claim")
+        await bus.emit("subclaims.ready", {"subclaims": subclaims, "claim_type": claim_type},
+                       round=0, act=1)
         sc_ids = [sc["id"] for sc in subclaims]
 
         # Web/RAG grounding for custom claims that arrive without a seeded evidence base.
@@ -94,7 +98,7 @@ class Foreman:
         for j in jurors:
             await bus.emit("juror.thinking", {"juror_id": j["slot"]}, round=0, act=1)
 
-        ballots = await self._gather_blind(jurors, claim, subclaims, evidence)
+        ballots = await self._gather_blind(jurors, claim, subclaims, evidence, claim_type)
         for j in jurors:
             await bus.emit("vote.cast", {"juror_id": j["slot"], "sealed": True}, round=0, act=1)
 
@@ -107,7 +111,7 @@ class Foreman:
         }
         await bus.emit("round.blind.reveal", {"tally": tally, "per_juror": per_juror}, round=0, act=1)
 
-        engine = ConsensusEngine(sc_ids)
+        engine = ConsensusEngine(sc_ids, claim_type=claim_type)
         votes = [_ballot_to_vote(j["slot"], ballots[j["slot"]], sc_ids) for j in jurors]
         result = engine.update(0, votes)
         await self._emit_consensus(result, round_no=0, act=1)
@@ -127,7 +131,7 @@ class Foreman:
 
             # Every juror reconsiders (concurrently); a rotating few take the floor.
             context = self._floor_context(result, last_turn)
-            turns = await self._gather_turns(jurors, claim, subclaims, evidence, context)
+            turns = await self._gather_turns(jurors, claim, subclaims, evidence, context, claim_type)
             for slot, t in turns.items():
                 last_turn[slot] = t
                 ballots[slot] = t.ballot
@@ -151,7 +155,7 @@ class Foreman:
                     await bus.emit("bias.flag", {"juror_id": j["slot"], "type": fl.type,
                                                  "severity": fl.severity, "note": fl.note},
                                    round=rnd, act=act)
-                fc = await self._safe(agents.verify_claim(reg, s, t.text, evidence),
+                fc = await self._safe(agents.verify_claim(reg, s, t.text, evidence, claim_type),
                                       FactcheckOut(status="pending", note="(verifier unavailable)"),
                                       "verify_claim")
                 await bus.emit("factcheck.result", {
@@ -222,21 +226,21 @@ class Foreman:
             return fallback
 
     # -- concurrency helpers ---------------------------------------------
-    async def _gather_blind(self, jurors, claim, subclaims, evidence) -> dict[str, JurorBallot]:
+    async def _gather_blind(self, jurors, claim, subclaims, evidence, claim_type) -> dict[str, JurorBallot]:
         async def one(j):
             try:
                 b = await agents.juror_blind_ballot(self.reg, self.s, _deployment(self.s, j), j,
-                                                    claim, subclaims, evidence)
+                                                    claim, subclaims, evidence, claim_type)
             except Exception:  # noqa: BLE001 — a juror that errors abstains rather than killing the run
                 b = JurorBallot(vote=0, confidence=0.3, rationale="(no response)")
             return j["slot"], b
         return dict(await asyncio.gather(*(one(j) for j in jurors)))
 
-    async def _gather_turns(self, jurors, claim, subclaims, evidence, context):
+    async def _gather_turns(self, jurors, claim, subclaims, evidence, context, claim_type):
         async def one(j):
             try:
                 t = await agents.juror_turn(self.reg, self.s, _deployment(self.s, j), j,
-                                            claim, subclaims, evidence, context)
+                                            claim, subclaims, evidence, context, claim_type)
             except Exception:  # noqa: BLE001
                 from schemas import JurorTurn
                 t = JurorTurn()

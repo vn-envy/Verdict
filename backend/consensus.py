@@ -73,9 +73,18 @@ LABELS = (
     (-1.01, "likely_false"),
 )
 
+# Normative/value claims default to CONTESTED unless the room strongly agrees (|score| > 0.5):
+# "not empirically proven" must not collapse into a confident true/false on a value judgment.
+NORMATIVE_LABELS = (
+    (0.5, "likely_true"),
+    (-0.5, "contested"),
+    (-1.01, "likely_false"),
+)
 
-def label_for(score: float) -> str:
-    for threshold, name in LABELS:
+
+def label_for(score: float, claim_type: str = "factual") -> str:
+    table = NORMATIVE_LABELS if claim_type == "normative" else LABELS
+    for threshold, name in table:
         if score >= threshold:
             return name
     return "likely_false"
@@ -98,8 +107,9 @@ def _weighted(pairs: list[tuple[Vote, float]]) -> tuple[float, float]:
 class ConsensusEngine:
     """Stateful across rounds so it can compute convergence, shifts and turning points."""
 
-    def __init__(self, subclaim_ids: list[str]):
+    def __init__(self, subclaim_ids: list[str], claim_type: str = "factual"):
         self.subclaim_ids = subclaim_ids
+        self.claim_type = claim_type
         self._prev: dict[str, JurorVote] = {}
         self._prev_score: float | None = None
 
@@ -144,7 +154,7 @@ class ConsensusEngine:
 
         return ConsensusResult(
             score=round(score, 4),
-            label=label_for(score),
+            label=label_for(score, self.claim_type),
             confidence=round(confidence, 4),
             convergence=round(convergence, 4),
             per_subclaim=per_subclaim,

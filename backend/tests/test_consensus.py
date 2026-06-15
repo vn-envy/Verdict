@@ -27,6 +27,19 @@ def test_label_thresholds():
     assert label_for(-0.9) == "likely_false"
 
 
+def test_normative_label_band_preserves_contested():
+    # Normative claims need strong agreement (|score| > 0.5) to leave 'contested', so moderate
+    # scores that would read leaning_true/false on a factual claim stay contested.
+    assert label_for(-0.40, "normative") == "contested"   # factual would be leaning_false
+    assert label_for(0.30, "normative") == "contested"    # factual would be leaning_true
+    assert label_for(-0.58, "normative") == "likely_false"  # strong agreement still resolves
+    assert label_for(0.55, "normative") == "likely_true"
+    # The engine threads claim_type into its label.
+    eng = ConsensusEngine(["sc1"], claim_type="normative")
+    r = eng.update(0, [_jv("A", -1, 0.6), _jv("B", -1, 0.5), _jv("C", 1, 0.6), _jv("D", 0, 0.4)])
+    assert -0.5 < r.score < 0 and r.label == "contested"
+
+
 def test_blind_round_matches_tape_shape():
     """Reproduce Case C's blind reveal (4 yes / 6 no / 2 abstain) and check ranges."""
     votes = [
