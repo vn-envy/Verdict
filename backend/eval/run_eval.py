@@ -82,7 +82,12 @@ async def _baseline_vote(reg, settings, claim: str) -> dict:
 
 async def run(args) -> int:
     ds = {c["key"]: c for c in _load_dataset()}
-    keys = [k.strip().upper() for k in args.cases.split(",")] if args.cases else list(ds.keys())
+    # Resolve --cases against the dataset case-insensitively (keys are A/B/C plus lowercase slugs).
+    if args.cases:
+        _lc = {k.lower(): k for k in ds}
+        keys = [_lc.get(s.strip().lower(), s.strip()) for s in args.cases.split(",")]
+    else:
+        keys = list(ds.keys())
     results: list[CaseResult] = []
 
     if args.dry:
@@ -110,7 +115,10 @@ async def run(args) -> int:
         try:
             from cases import custom_case
             for k in keys:
-                c = ds[k]
+                c = ds.get(k)
+                if c is None:
+                    print(f"  ✗ unknown case key: {k}", flush=True)
+                    continue
                 # Self-contained cases carry their own claim; A/B/C load from cases.py.
                 try:
                     case = custom_case(c["claim"]) if c.get("claim") else load_case(k)
