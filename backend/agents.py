@@ -63,9 +63,13 @@ def _persona(juror: dict) -> str:
 async def classify_claim(reg: ModelRegistry, s: Settings, claim: str) -> str:
     raw = await reg.complete(
         s.gpt4o_mini,
-        "You classify a claim's TYPE. 'factual' = an empirically checkable statement that is true "
-        "or false in principle (even if hard to verify). 'normative' = a value, fairness, policy, "
-        "or 'better/best/should' judgment where well-informed people reasonably disagree.",
+        "Classify a claim's TYPE. DEFAULT to 'factual'. Choose 'normative' ONLY if the claim is "
+        "primarily a value, fairness, policy, or 'should/best/better/worth-it' judgment that "
+        "evidence cannot settle even in principle. A claim about what IS true in the world — "
+        "science, history, economics, health — is 'factual' EVEN IF politically charged or "
+        "disputed in bad faith. Examples: 'vaccines cause autism'=factual; 'climate change is "
+        "human-caused'=factual; 'antibiotics work on colds'=factual; 'UBI would improve "
+        "wellbeing'=normative; 'surge pricing is fair'=normative; 'nuclear is the best path'=normative.",
         f'CLAIM: {claim}\n\nReturn ONLY JSON: {{"type":"factual|normative"}}',
         max_tokens=60,
     )
@@ -110,7 +114,10 @@ async def juror_turn(
     subclaims: list[dict], evidence: list[dict], context: str, claim_type: str = "factual",
 ) -> JurorTurn:
     sys = (_persona(juror) + " It is now open debate; weigh the floor and the evidence, then update."
-           + _normative_note(claim_type))
+           " Anchor on the EVIDENCE, not the room's mood: do NOT lower a well-evidenced vote just "
+           "because others sound skeptical or a contrarian point was raised — change your vote only "
+           "if the evidence itself genuinely warrants it. Equally, hold a strong stance only while "
+           "the evidence supports it." + _normative_note(claim_type))
     user = (
         f"CLAIM: {claim}\n\nSUB-CLAIMS:\n" + "\n".join(f"  {sc['id']}: {sc['text']}" for sc in subclaims)
         + "\n\nEVIDENCE:\n" + evidence_brief(evidence)

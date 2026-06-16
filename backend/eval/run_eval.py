@@ -37,6 +37,7 @@ def _weighted_sign(per_juror: list[dict]) -> float:
 def result_from_events(c: dict, events: list[dict], baseline=None) -> CaseResult:
     verdict = next((e["data"] for e in events if e["event"] == "verdict.final"), {})
     reveal = next((e["data"] for e in events if e["event"] == "round.blind.reveal"), {})
+    subready = next((e["data"] for e in events if e["event"] == "subclaims.ready"), {})
     consensus = verdict.get("consensus", {})
     return CaseResult(
         key=c["key"],
@@ -53,6 +54,7 @@ def result_from_events(c: dict, events: list[dict], baseline=None) -> CaseResult
         baseline_confidence=(baseline or {}).get("confidence"),
         category=c.get("category", "uncategorized"),
         difficulty=c.get("difficulty", "medium"),
+        claim_type=subready.get("claim_type", "factual"),
     )
 
 

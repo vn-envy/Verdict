@@ -24,8 +24,9 @@ class CaseResult:
     bias_flags: int
     baseline_score: float | None = None      # single-model baseline (None if not run)
     baseline_confidence: float | None = None
-    category: str = "uncategorized"          # factual | values
+    category: str = "uncategorized"          # factual | values (dataset label)
     difficulty: str = "medium"               # easy | medium | hard
+    claim_type: str = "factual"              # what the live classifier tagged it (factual|normative)
 
 
 def _sign(x: float) -> int:
@@ -222,12 +223,12 @@ def report_markdown(results: list[CaseResult], s: dict) -> str:
             lines.append(f"| {b['range']} | {b['n']} | {b['avg_confidence']} | {b['accuracy']} |")
     lines += [
         "",
-        "| Case | truth | blind | verdict | conf | correct | turning | minority |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Case | truth | type | blind | verdict | conf | correct | turning | minority |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in results:
         lines.append(
-            f"| {r.key} | {r.truth_label} | {r.blind_score:+.2f} | {r.final_label} ({r.final_score:+.2f}) "
+            f"| {r.key} | {r.truth_label} | {r.claim_type[:4]} | {r.blind_score:+.2f} | {r.final_label} ({r.final_score:+.2f}) "
             f"| {r.final_confidence:.2f} | {'✓' if is_correct(r.truth_sign, r.final_score, r.final_label) else '✗'} "
             f"| {'●' if r.had_turning_point else '–'} | {'●' if r.minority_preserved else '–'} |"
         )

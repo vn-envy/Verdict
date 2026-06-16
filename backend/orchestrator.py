@@ -254,11 +254,14 @@ class Foreman:
         return rotated[:SPEAKERS_PER_ROUND]
 
     def _floor_context(self, result, last_turn) -> str:
-        lines = [f"Current room lean: {result.label} (score {result.score:+.2f}, "
-                 f"convergence {result.convergence:.2f})."]
+        # Deliberately DO NOT broadcast the running tally/score/label: a visible vote count makes
+        # jurors herd to the room's mood (bandwagon), which the eval showed dragging well-evidenced
+        # votes off. Jurors see only the arguments on the floor and judge them on the evidence.
         recent = [getattr(t, "text", "") for t in list(last_turn.values())[-4:] if getattr(t, "text", "")]
-        for r in recent:
-            lines.append(f"- A juror argued: {r}")
+        lines = ["Arguments raised on the floor so far:"]
+        lines.extend(f"- A juror argued: {r}" for r in recent)
+        if not recent:
+            lines.append("- (opening statements)")
         return "\n".join(lines)
 
     async def _emit_consensus(self, result, *, round_no, act):
